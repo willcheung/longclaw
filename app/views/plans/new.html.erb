@@ -68,11 +68,14 @@
           </div> -->
           <div><h1 class="basic-price">Free</h1></div>
         </div>
-        <p class="text-muted"><h4>&nbsp;</h4><h4>&nbsp;</h4>
-        </p>
 
         <div class="plan-action">
-          <a class="btn btn-primary btn-block btn-large" disabled href="#"><%= (current_user.plus? || current_user.pro?) ? 'Included' : 'Your current plan' %></a>
+          <% if current_user %>
+            <p class="text-muted"><h4>&nbsp;</h4><h4>&nbsp;</h4></p>
+            <a class="btn btn-primary btn-block btn-large" disabled href="#"><%= (current_user.plus? || current_user.pro?) ? 'Included' : 'Your current plan' %></a>
+          <% else %>
+            <a class="btn btn-primary btn-large" href="https://chrome.google.com/webstore/detail/contextsmith-email-tracke/idihnnlkpfggfgjinfiodninabjggfop" target="_blank">Install for free</a>
+          <% end %>
         </div>
       </th>
 
@@ -92,8 +95,9 @@
           <div><h1 class="plus-price">$5/mo</h1></div>
         </div>
 
-        <h4 class="text-muted" style="font-weight: 300">14 days free trial</h4><h4 class="text-muted" style="font-weight: 300">No credit card required</h4>
-
+        <% if current_user %>
+          <h4 class="text-muted" style="font-weight: 300">14 days free trial</h4><h4 class="text-muted" style="font-weight: 300">No credit card required</h4>
+        <% end %>
 
         <div class="plan-action">
           <% if @customer.present? && @customer.subscriptions.present? %>
@@ -115,10 +119,14 @@
                   <% end %>
               <% end %>
           <% else %>
-              <div class="btn-group">
-                <a class="share-action btn btn-primary btn-large btn-outline"><i class="fa fa-gift"></i> Refer a friend!</a>
-                <a class="btn btn-primary btn-large start plus-start" data-amount=0 data-plan="plus-monthly-v1" href="#">Try for free</a>
-              </div>
+              <% if current_user %>
+                <div class="btn-group">
+                  <a class="share-action btn btn-primary btn-large btn-outline"><i class="fa fa-gift"></i> Refer a friend!</a>
+                  <a class="btn btn-primary btn-large start plus-start" data-amount=0 data-plan="plus-monthly-v1" href="#">Try for free</a>
+                </div>
+              <% else %>
+                  <a class="btn btn-primary btn-large" href="https://chrome.google.com/webstore/detail/contextsmith-email-tracke/idihnnlkpfggfgjinfiodninabjggfop" target="_blank">Install for free</a>
+              <% end %>
           <% end %>
         </div>
 
@@ -138,7 +146,9 @@
           <div><h1 class="pro-price">$39/mo</h1></div>
         </div>
 
-        <h4 class="text-muted" style="font-weight: 300">14 days free trial</h4><h4 class="text-muted" style="font-weight: 300">No credit card required</h4>
+        <% if current_user %>
+          <h4 class="text-muted" style="font-weight: 300">14 days free trial</h4><h4 class="text-muted" style="font-weight: 300">No credit card required</h4>
+        <% end %>
 
         <div class="plan-action">
           <% if @customer.present? && @customer.subscriptions.present? %>
@@ -160,8 +170,11 @@
                   <% end %>
               <% end %>
           <% else %>
-                  <a class="btn btn-primary btn-large start pro-start" data-amount=3900 data-plan="pro-monthly-v1" href="#">Try for free</a>
-              </div>
+            <% if current_user %>
+                <a class="btn btn-primary btn-large start pro-start" data-amount=3900 data-plan="pro-monthly-v1" href="#">Try for free</a>
+            <% else %>
+                <a class="btn btn-primary btn-large" href="https://chrome.google.com/webstore/detail/contextsmith-email-tracke/idihnnlkpfggfgjinfiodninabjggfop" target="_blank">Install for free</a>
+            <% end %>
           <% end %>
         </div>
 
@@ -299,14 +312,14 @@
               <td colspan="6" class="header">Exchange Online and Office365 Integration</td>
               <td colspan="2"></td>
               <td colspan="2"></td>
-              <td colspan="2"><a href="https://www.contextsmith.com/demo/">Contact Us</a></td>
+              <td colspan="2"><a href="mailto:support@contextsmith.com">Contact Us</a></td>
             </tr>
 
 
         </tbody>
   </table>
   </div>
-    <h2 class="text-center m-b-xl m-t-xl">Looking for Business or Enterprise plans? Please <a href="https://www.contextsmith.com/demo/">contact us</a>.</h2>
+    <h2 class="text-center m-b-xl m-t-xl">Looking for Business or Enterprise plans? Please <a href="mailto:support@contextsmith.com">contact us</a>.</h2>
   </div>
 
 </div>

@@ -4,20 +4,17 @@ Longclaw::Application.routes.draw do
     get "extension" => "extension#new"
     get "extension/account" => "extension#new"
     get "extension/custom_view" => "extension#new"
-    # resources :plans
   end
 
+  resources :plans
   get 'home/access_denied'
-  get 'home/privacy'
-  get 'home/terms'
-  root :to => "home#landing"
 
   devise_for :users, :controllers => { :omniauth_callbacks => "omniauth_callbacks", :sessions => "sessions" }
   # You can have the root of your site routed with "root"
 
   authenticate :user do
     # Rails 4 users must specify the 'as' option to give it a unique name
-    get 'home/index', as: 'home'
+    root :to => "home#index", :as => "authenticated_root"
 
     resources :accounts
     post "/account_bulk" => 'accounts#bulk'
@@ -45,7 +42,7 @@ Longclaw::Application.routes.draw do
     resources :users
     get 'user/me' => 'users#me'
     get 'plans/upgrade' => 'plans#upgrade'
-    resources :plans
+    #resources :plans
 
     resources :notifications, only: [:index, :update, :create] do
       member do
@@ -68,17 +65,6 @@ Longclaw::Application.routes.draw do
     delete "/delete_salesforce_account/:id" => 'salesforce#remove_account_link'
     delete "/delete_salesforce_opportunity/:id" => 'salesforce#remove_opportunity_link'
     post "/salesforce/update_all/:entity_type/:id" => 'salesforce#update_all_salesforce'
-
-    # resources :salesforce_accounts, only: [:index, :update, :destroy]
-    # resources :salesforce_opportunities, only: [:index, :update, :destroy]
-
-    resources :basecamp, only: [:index]
-    get "basecamp_controller/index"
-    post "/link_stream" => 'basecamps#link_basecamp2_account'
-    post "/refresh_stream" => 'basecamps#refresh_stream'
-    post "/link_basecamp2_account" => 'basecamps#link_basecamp2_account'
-    delete "/delete_basecamp2_account/:id" => 'basecamps#remove_basecamp2_account'
-    delete "/basecamp2/disconnect/:id" => 'basecamps#disconnect'
 
     scope "settings", controller: :settings, as: 'settings' do
       get "/" => "settings#index"
