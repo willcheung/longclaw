@@ -81,15 +81,6 @@ class HomeController < ApplicationController
     end
   end
 
-  def landing
-  end
-
-  def privacy
-  end
-
-  def terms
-  end
-
   private
 
   def check_user_onboarding

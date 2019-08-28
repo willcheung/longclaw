@@ -4,14 +4,14 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
     User.from_sfdc_omniauth(request.env["omniauth.auth"], current_user)
     set_salesforce_scheduled_sync_custom_configuration(current_user)
     InitialSalesforceLoginsJob.perform_later(current_user)
-    redirect_to (session.delete(:return_to_path) || home_path)
+    redirect_to (session.delete(:return_to_path) || root_path)
   end
 
   def salesforcesandbox
     User.from_sfdc_omniauth(request.env["omniauth.auth"], current_user)
     set_salesforce_scheduled_sync_custom_configuration(current_user)
     InitialSalesforceLoginsJob.perform_later(current_user)
-    redirect_to (session.delete(:return_to_path) || home_path)
+    redirect_to (session.delete(:return_to_path) || root_path)
   end
 
   # login for basic users. only requires email/profile scope

@@ -5,7 +5,7 @@
                 <i class="fa fa-reorder"></i>
             </button>
 
-            <a href="<%= home_path %>" class="navbar-brand" style="width:150px">
+            <a href="<%= root_path %>" class="navbar-brand" style="width:150px">
                 <span class="clear">
                     <div class="block logo">&nbsp;</div>
                 </span>
@@ -15,7 +15,7 @@
             <ul class="nav navbar-nav">
             
                 <li class="<%= is_active_controller('home') and is_active_action('index') %>">
-                    <a href="<%= home_path %>"><i class="fa fa-home"></i> <span class="nav-label">Home</span></a>
+                    <a href="<%= root_path %>"><i class="fa fa-home"></i> <span class="nav-label">Home</span></a>
                 </li>
                 <li class="<%= is_active_controller('accounts') %>">
                     <a href="<%= accounts_path %>"><i class="fa fa-users"></i> <span class="nav-label">Accounts</span></a>

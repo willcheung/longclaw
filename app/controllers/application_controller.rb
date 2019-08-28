@@ -46,7 +46,7 @@ class ApplicationController < ActionController::Base
       elsif resource.pro?
         case resource.onboarding_step
           when Utils::ONBOARDING[:onboarded] # Fully onboarded
-            stored_location || home_path
+            stored_location || root_path
           when Utils::ONBOARDING[:confirm_projects]
             if resource.cluster_create_date.nil?
               # Clusters not ready yet
@@ -59,7 +59,7 @@ class ApplicationController < ActionController::Base
           when Utils::ONBOARDING[:fill_in_info]
             onboarding_fill_in_info_path
           else
-            stored_location || home_path
+            stored_location || root_path
         end
       else
         home_access_denied_path
@@ -71,11 +71,7 @@ class ApplicationController < ActionController::Base
   end
 
   def after_sign_out_path_for(resource_or_scope)
-    if params[:extension]
-      root_path + 'extension'
-    else
-      home_path
-    end
+    "https://contextsmith.com"
   end
 
   protected
@@ -110,7 +106,7 @@ class ApplicationController < ActionController::Base
     if current_user.oauth_access_token == "invalid"
       reset_session
       session[:redirect_to] = request.referer
-      redirect_to session[:redirect_to] || home_path
+      redirect_to session[:redirect_to] || root_path
     end
   end
 
