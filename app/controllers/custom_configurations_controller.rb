@@ -38,7 +38,7 @@ class CustomConfigurationsController < ApplicationController
         @custom_configuration = CustomConfiguration.where(organization: current_user.organization).find(params[:id])
       end
     rescue ActiveRecord::RecordNotFound
-      redirect_to root_path, :flash => { :error => "Custom Configuration not found or is private." }
+      redirect_to authenticated_root_path, :flash => { :error => "Custom Configuration not found or is private." }
     end
   end
 

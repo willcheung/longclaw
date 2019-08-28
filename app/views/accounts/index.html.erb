@@ -3,7 +3,7 @@
         <h2>Accounts</h2>
         <ol class="breadcrumb">
             <li>
-                <a href="<%= root_path %>">Home</a>
+                <a href="<%= authenticated_root_path %>">Home</a>
             </li>
             <li class="active">
                 <strong>Accounts</strong>
@@ -97,7 +97,7 @@
     </div>
 </div>
 
-<%= render 'accounts/modal', modal_id: 'new_account_modal' %>
+<%= render 'accounts/modal', modal_id: 'new_account_modal', modal_type: 'app_account_modal' %>
 
 
 

@@ -4,7 +4,7 @@
         <% if params[:controller] != "home" %>
         <ol class="breadcrumb">
             <li>
-                <a href="<%= root_path %>">Home</a>
+                <a href="<%= authenticated_root_path %>">Home</a>
             </li>
             <li class="active">
                 <strong><%= @title %></strong>

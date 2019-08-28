@@ -196,7 +196,7 @@ class AccountsController < ApplicationController
           puts "****SFDC**** Warning: no SFDC connection is available or can be established for user=#{current_user.email}, organization=#{current_user.organization.name}. Linked Salesforce account was not be updated!" if @sfdc_client.nil? # TODO: Issue a warning to the user that the linked SFDC acct was not updated! 
         end
       rescue ActiveRecord::RecordNotFound
-        redirect_to root_path, :flash => { :error => "Account not found or is private." }
+        redirect_to authenticated_root_path, :flash => { :error => "Account not found or is private." }
       end
     end
 

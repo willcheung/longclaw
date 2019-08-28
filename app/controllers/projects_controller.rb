@@ -459,7 +459,7 @@ class ProjectsController < ApplicationController
   def set_visible_project
     @project = Project.visible_to(current_user.organization_id, current_user.id).find(params[:id])
   rescue ActiveRecord::RecordNotFound
-    redirect_to root_path, :flash => { :error => "Project not found or is private." }
+    redirect_to authenticated_root_path, :flash => { :error => "Project not found or is private." }
   end
 
   # Should we re-use Project.visible_to scope?
@@ -477,7 +477,7 @@ class ProjectsController < ApplicationController
       puts "****SFDC**** Warning: no SFDC connection is available or can be established for user=#{current_user.email}, organization=#{current_user.organization.name}. Linked Salesforce opportunity was not updated!" if @sfdc_client.nil? # TODO: Issue a warning to the user that the linked SFDC opp was not updated!
     end
   rescue ActiveRecord::RecordNotFound
-    redirect_to root_path, :flash => { :error => "Project not found or is private." }
+    redirect_to authenticated_root_path, :flash => { :error => "Project not found or is private." }
   end
 
   def get_account_names
