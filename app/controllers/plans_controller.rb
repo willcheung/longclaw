@@ -33,7 +33,6 @@ class PlansController < ApplicationController
   end
 
   def create
-    # TODO Need to take care of upgrade/downgrade plans
 
     token = params[:stripeToken]
     token = token == '' ? nil : token
@@ -64,7 +63,7 @@ class PlansController < ApplicationController
       logger.info "Subscription exists #{customer.subscriptions.data.collect{|s| s.plan.nickname}.join(', ')}"
 
       # If in the middle of a trial
-      if Time.at(customer.subscriptions.data.first.trial_end) > Time.now
+      if !customer.subscriptions.data.first.trial_end.nil? and Time.at(customer.subscriptions.data.first.trial_end) > Time.now
         # End trial, which will trigger charge/invoice
         # https://stripe.com/docs/billing/subscriptions/trials
         Stripe::Subscription.update(
@@ -74,9 +73,26 @@ class PlansController < ApplicationController
           }
         )
       else # If trial expired and/or cc payment failed, subscription has 2 states.  "past_due" and "unpaid"
-        if customer.subscriptions.first.status == 'active'
+        if customer.subscriptions.first.status == 'active' and customer.subscriptions.first.plan == plan
+          # Same plan, nothing to do!
           logger.info "On active subscription.  Nothing to do!"
-          raise "You're already on an active subscription!" # happy state, do nothing
+          raise "<p>You're on a paid plan! </p> <p>You can also click \"Purchase\" to select a new plan.</p>".html_safe # happy state, do nothing
+        elsif customer.subscriptions.first.status == 'active' and customer.subscriptions.first.plan != plan
+          # Update plan if different from current plan
+          logger.info "Updating plan to #{plan}!"
+
+          subscription = Stripe::Subscription.update(
+              customer.subscriptions.first.id,
+              {
+                cancel_at_period_end: false,
+                items: [
+                  {
+                    id: customer.subscriptions.first.items.data[0].id,
+                    plan: plan
+                  }
+                ],
+              }
+            )
         elsif customer.subscriptions.first.status == 'past_due' || customer.subscriptions.first.status == 'unpaid'
           # Find latest invoice, its period end date and calculate prorated for next invoice
           invoice = Stripe::Invoice.retrieve(customer.subscriptions.first.latest_invoice)
@@ -109,8 +125,7 @@ class PlansController < ApplicationController
         end
       end
 
-      subscription = customer.subscriptions.first
-      flash[:notice] = "Thank you for subscribing to #{customer.subscriptions.data.first.plan.nickname}!"
+      flash[:notice] = "Thank you for subscribing to ContextSmith!"
     else
       # Creates new subscription with 14 day trial
       subscription = Stripe::Subscription.create(
@@ -126,10 +141,14 @@ class PlansController < ApplicationController
       flash[:notice] = "Great, enjoy our free trial!"
     end
 
+    # Update ContextSmith user
+    logger.info "New subscription plan: #{subscription.plan.id}"
     if subscription.plan.id.start_with?('pro-')
       current_user.upgrade(:Pro)
+      logger.info "Changing user to Pro"
     elsif subscription.plan.id.start_with?('plus-')
       current_user.upgrade(:Plus)
+      logger.info "Changing user to Plus"
     else
       raise "Invalid plan! Please try again."
     end
