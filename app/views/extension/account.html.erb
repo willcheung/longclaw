@@ -329,12 +329,10 @@
                                                       <%= "title=#{p[:email]}" if fullname != p[:email] %>
                                                     ><extrastrong><%= fullname %></extrastrong></td></tr>
                                                     <tr><td><%= title %></td></tr>
-                                                    <% if profile.location.present? %>
-                                                        <tr><td>
-                                                            <i class="fa fa-map-marker" aria-hidden="true"></i>&nbsp; <%= profile.location.gsub(", United States", "") %>
-                                                        </td></tr>
-                                                    <% end %>
                                                     <% if contact.present? %>
+                                                        <tr><td>
+                                                            <i class="fa fa-phone"></i> <%= contact.phone %>
+                                                        </td></tr>
                                                         <tr><td>
                                                             <i class="fa fa-building"></i> <strong>Account:</strong> <%= contact.account.name %>
                                                         </td></tr>
@@ -392,15 +390,6 @@
                             <table class="social-group">
                                <tbody>
                                     <tr style="margin-left: auto; margin-right: auto; width: 100px">
-                                        <% if current_user.pro? && @salesforce_base_URL.present? && contact.present? && contact.source == 'Salesforce' %>
-                                            <td>
-                                                <a href="<%= @salesforce_base_URL + "/" + contact.external_source_id %>" target="_blank"><img src="/assets/images/salesforce.png" class="sfdc-icon" title="Open Salesforce page in new window"/></a>
-                                            </td>
-                                        <% else %>
-                                            <td class="disabled">
-                                                <img src="/assets/images/salesforce.png" class="sfdc-icon"/>
-                                            </td>
-                                        <% end %>
                                         <td <%= "class=disabled" if profile.social_url(Profile::SOCIAL_TYPE[:Linkedin]).blank? %>>
                                             <a href="<%= profile.social_url(Profile::SOCIAL_TYPE[:Linkedin]) %>" target="_blank" title="Open LinkedIn page in new window"><i class="fa fa-linkedin-square fa-2x linkedin-icon" aria-hidden="true" data-toggle="tooltip" data-placement="top" data-html="true" 
                                             <% if profile.social_bio(Profile::SOCIAL_TYPE[:Linkedin]).present? %>
@@ -446,13 +435,13 @@
                             </table>
                             <table class="activity-group">
                                 <tr><td>&nbsp;</td></tr>
-                                <tr><td><span class="panel-title"><extrastrong>Activity</extrastrong></span>&nbsp;&nbsp;Last 30 days<i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-html="true" data-original-title="Activity of tracked emails. To track an email, check the ☑<b>CS&nbsp;Track</b> checkbox in the compose email window."></i></td></tr>
+                                <tr><td><span class="panel-title"><extrastrong>Activities</extrastrong></span>&nbsp;&nbsp;Last 30 days<i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-html="true" data-original-title="Activity of tracked emails. To track an email, check the ☑<b>CS&nbsp;Track</b> checkbox in the compose email window."></i></td></tr>
                                 <tr>
                                     <td><table>
                                         <tr>
                                             <td><button><i class="fa fa-envelope-o" aria-hidden="true"></i>&nbsp;&nbsp;<span class="statistics"><%= @emails_sent_per_person[p[:email]].present? ? @emails_sent_per_person[p[:email]] : 0 %></span><br/>Sent</button></td>
                                             <td><button><i class="fa fa-envelope-open-o" aria-hidden="true"></i>&nbsp;&nbsp;<span class="statistics"><%= @emails_pct_opened_per_person[p[:email]].present? ? (@emails_pct_opened_per_person[p[:email]] * 100).round(0) : 0 %>%</span><br/>Opened</button></td>
-                                            <td><button><i class="fa fa-envelope-open" aria-hidden="true"></i>&nbsp;&nbsp;<span class="statistics"><%= @emails_engagement_per_person[p[:email]].present? ? (@emails_engagement_per_person[p[:email]]).round(1) : 0 %>x</span><br/>Engagement</button></td>
+                                            <td><button><i class="fa fa-envelope-open" aria-hidden="true"></i>&nbsp;&nbsp;<span class="statistics"><%= @emails_engagement_per_person[p[:email]].present? ? (@emails_engagement_per_person[p[:email]]).round(1) : 0 %>x</span><br/>Per Email</button></td>
                                         </tr>
                                     </table></td>
                                 </tr>
