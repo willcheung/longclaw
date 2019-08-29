@@ -86,7 +86,7 @@
             <!-- Navigation -->
             <div class="navbar-header border-bottom">
             <% if current_user.role == 'Basic' %>
-                <div class="pull-left m-t-xs"><a class="btn btn-primary btn-sm" href="/plans/new"><i class="fa fa-star"></i> Upgrade</a></div>
+                <div class="pull-left m-t-xs"><a class="btn btn-primary btn-sm" href="/plans/new" target="_blank"><i class="fa fa-star"></i> Upgrade</a></div>
             <% end %>
                 <span style="width:100px; display:inline-block">
                     <a href="<%= current_user.pro? ? authenticated_root_path : "http://www.contextsmith.com" %>" target="_blank" class="navbar-brand">
