@@ -64,9 +64,11 @@ class PlansController < ApplicationController
 
       # If in the middle of a trial
       if !customer.subscriptions.data.first.trial_end.nil? and Time.at(customer.subscriptions.data.first.trial_end) > Time.now
+        logger.info "In middle of trial. Ending it now to trigger charge/invoice."
         # End trial, which will trigger charge/invoice
         # https://stripe.com/docs/billing/subscriptions/trials
-        Stripe::Subscription.update(
+        # TODO: What if they selected another plan? Need to handle...
+        subscription = Stripe::Subscription.update(
           customer.subscriptions.first.id,
           {
             trial_end: 'now',
@@ -101,7 +103,7 @@ class PlansController < ApplicationController
 
           # Determine which subscription they're on
           if customer.subscriptions.first.plan.id.start_with?('pro-')
-            amt = 3900
+            amt = 2500
           elsif customer.subscriptions.first.plan.id.start_with?('plus-')
             amt = 500
           else

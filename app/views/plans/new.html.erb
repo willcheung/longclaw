@@ -64,7 +64,7 @@
             <label class="btn btn-default btn-on btn-sm active basic-yearly">
               <input type="radio" value="1" name="basic-v1" checked="checked">Yearly</label>
             <label class="btn btn-default btn-off btn-sm basic-monthly">
-              <input type="radio" value="0" name="pro-monthly-v1">Monthly</label>
+              <input type="radio" value="0" name="pro-monthly-v2">Monthly</label>
           </div> -->
           <div><h1 class="basic-price">Free</h1></div>
         </div>
@@ -141,9 +141,9 @@
             <label class="btn btn-default btn-on btn-sm active pro-yearly">
               <input type="radio" value="1" name="pro-v1" checked="checked">Yearly</label>
             <label class="btn btn-default btn-off btn-sm pro-monthly">
-              <input type="radio" value="0" name="pro-monthly-v1">Monthly</label>
+              <input type="radio" value="0" name="pro-monthly-v2">Monthly</label>
           </div> -->
-          <div><h1 class="pro-price">$39/mo</h1></div>
+          <div><h1 class="pro-price">$25/mo</h1></div>
         </div>
 
         <% if current_user %>
@@ -152,26 +152,26 @@
 
         <div class="plan-action">
           <% if @customer.present? && @customer.subscriptions.present? %>
-              <% if @trial_expiration_time && (@trial_expiration_time > Time.now) && @customer.subscriptions.data.first.plan.id == 'pro-monthly-v1' %>
-                  <a class="btn btn-primary btn-large upgrade pro-upgrade" data-amount=3900 data-plan="pro-monthly-v1" href="#">Purchase</a>
+              <% if @trial_expiration_time && (@trial_expiration_time > Time.now) && @customer.subscriptions.data.first.plan.id == 'pro-monthly-v2' %>
+                  <a class="btn btn-primary btn-large upgrade pro-upgrade" data-amount=2500 data-plan="pro-monthly-v2" href="#">Purchase</a>
                   <p class="text-muted" style="font-weight:300; color: red"><small><%= @time_remaining_until_expiration_str %> remaining in free trial.</small></p>
-              <% elsif @subscription_expiration_time && (@subscription_expiration_time > Time.now) && @customer.subscriptions.first.status == 'active' && @customer.subscriptions.data.first.plan.id == 'pro-monthly-v1' %>
+              <% elsif @subscription_expiration_time && (@subscription_expiration_time > Time.now) && @customer.subscriptions.first.status == 'active' && @customer.subscriptions.data.first.plan.id == 'pro-monthly-v2' %>
                   <a class="btn btn-primary btn-large" disabled href="#">Your current plan</a>
                   <p class="text-muted" style="font-weight:300;"><small>Renews in <%= @time_remaining_until_expiration_str %> </small></p>
-              <% elsif @subscription_expiration_time && (@subscription_expiration_time > Time.now) && (@customer.subscriptions.first.status == 'past_due' || @customer.subscriptions.first.status == 'unpaid') && @customer.subscriptions.data.first.plan.id == 'pro-monthly-v1' %>
-                  <a class="btn btn-primary btn-large upgrade pro-upgrade" data-amount=3900 data-plan="pro-monthly-v1" href="#">Purchase</a>
-                  <% if @customer.subscriptions.data.first.plan.id == 'pro-monthly-v1' %>
+              <% elsif @subscription_expiration_time && (@subscription_expiration_time > Time.now) && (@customer.subscriptions.first.status == 'past_due' || @customer.subscriptions.first.status == 'unpaid') && @customer.subscriptions.data.first.plan.id == 'pro-monthly-v2' %>
+                  <a class="btn btn-primary btn-large upgrade pro-upgrade" data-amount=2500 data-plan="pro-monthly-v2" href="#">Purchase</a>
+                  <% if @customer.subscriptions.data.first.plan.id == 'pro-monthly-v2' %>
                   <p class="text-muted" style="font-weight:300; color: red"><small>Your trial has ended.</small></p>
                   <% end %>
               <% else %>
-                  <a class="btn btn-primary btn-large upgrade pro-upgrade" data-amount=3900 data-plan="pro-monthly-v1" href="#">Purchase</a>
-                  <% if @customer.subscriptions.data.first.plan.id == 'pro-monthly-v1' %>
+                  <a class="btn btn-primary btn-large upgrade pro-upgrade" data-amount=2500 data-plan="pro-monthly-v2" href="#">Purchase</a>
+                  <% if @customer.subscriptions.data.first.plan.id == 'pro-monthly-v2' %>
                   <p class="text-muted" style="font-weight:300; color: red"><small>Your trial has ended.</small></p>
                   <% end %>
               <% end %>
           <% else %>
             <% if current_user %>
-                <a class="btn btn-primary btn-large start pro-start" data-amount=3900 data-plan="pro-monthly-v1" href="#">Try for free</a>
+                <a class="btn btn-primary btn-large start pro-start" data-amount=2500 data-plan="pro-monthly-v2" href="#">Try for free</a>
             <% else %>
                 <a class="btn btn-primary btn-large" href="https://chrome.google.com/webstore/detail/contextsmith-email-tracke/idihnnlkpfggfgjinfiodninabjggfop" target="_blank">Install for free</a>
             <% end %>
@@ -315,13 +315,6 @@
             return true;
         });
     }
-
-    // togglePrice('.plus-yearly', '.plus-price', '.plus-upgrade', 5, 500, 'plus-v1');
-    // togglePrice('.plus-monthly', '.plus-price', '.plus-upgrade', 5, 500, 'plus-monthly-v1');
-    // togglePrice('.pro-yearly', '.pro-price', '.pro-upgrade', 35, 42000, 'pro-v1');
-    // togglePrice('.pro-monthly', '.pro-price', '.pro-upgrade', 39, 3900, 'pro-monthly-v1');
-    //$('.stripe-button-el span').attr('style', null);
-    //$('.stripe-button-el').removeClass('stripe-button-el').addClass('btn btn-primary btn-block btn-large')
 
     var handler = StripeCheckout.configure({
         key: '<%= Rails.configuration.stripe[:publishable_key] %>',

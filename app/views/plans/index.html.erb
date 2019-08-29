@@ -4,7 +4,9 @@
     <% if params[:welcome] %>
     <h1>Thank you for upgrading!</h1>
     <% end %>
-    <h2>Your subscribed plan is: <%= @subscription.plan.nickname %></h2>
+    <% if !@subscription.nil? %>
+        <h2>Your subscribed plan is: <%= @subscription.plan.nickname %></h2>
+    <% end %>
     <h2>Your role is: <%= current_user.role %></h2>
 
     <% if current_user.role == User::ROLE[:Pro] %>
