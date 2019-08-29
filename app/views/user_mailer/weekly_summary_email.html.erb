@@ -155,9 +155,9 @@
                             <td style="color:<%= risk_score_chg_color %>;font-size:14px;padding-right:0px;min-width:140px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;line-height:initial">
                               <div>
                               <% if risk_score_chg_arrow == 'Up' %> 
-                                <img src="<%= root_url %>/assets/images/icons/uparrow-red.png" style="width:11px;height:10px;margin-top:3px;" title=“Up” alt="Up">
+                                <img src="https://app.contextsmith.com/assets/images/icons/uparrow-red.png" style="width:11px;height:10px;margin-top:3px;" title=“Up” alt="Up">
                               <% elsif risk_score_chg_arrow == 'Down' %>
-                                <img src="<%= root_url %>/assets/images/icons/downarrow-green.png" style="width:11px;height:10px;margin-top:3px;" title=“Down” alt="Down">
+                                <img src="https://app.contextsmith.com/assets/images/icons/downarrow-green.png" style="width:11px;height:10px;margin-top:3px;" title=“Down” alt="Down">
                               <% else %>
                                 <%= risk_score_chg_arrow %>
                               <% end %>
@@ -181,9 +181,9 @@
                             <!-- Open Alerts Last Week -->
                             <td style="color:<%= alerts_chg_color %>;font-size:14px;padding-right:0px;min-width:150px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;line-height:initial">
                             <% if alerts_chg_arrow == 'Up' %> 
-                                <img src="<%= root_url %>/assets/images/icons/uparrow-red.png" style="width:11px;height:10px;margin-top:3px;" title=“Up” alt="Up">
+                                <img src="https://app.contextsmith.com/assets/images/icons/uparrow-red.png" style="width:11px;height:10px;margin-top:3px;" title=“Up” alt="Up">
                               <% elsif alerts_chg_arrow == 'Down' %>
-                                <img src="<%= root_url %>/assets/images/icons/downarrow-green.png" style="width:11px;height:10px;margin-top:3px;" title=“Down” alt="Down">
+                                <img src="https://app.contextsmith.com/assets/images/icons/downarrow-green.png" style="width:11px;height:10px;margin-top:3px;" title=“Down” alt="Down">
                               <% else %>
                                 <%= alerts_chg_arrow %>
                               <% end %> 
@@ -228,7 +228,7 @@
           <% if a.category == Activity::CATEGORY[:Note] %>
           <!-- Notes -->
             <td style="padding-top:5px;padding-right:5px;min-width:30px;max-width:35px;">
-              <img src="<%= root_url %>/assets/images/icons/note_icon.png" title="Note sent <%= activity_date %>">
+              <img src="https://app.contextsmith.com/assets/images/icons/note_icon.png" title="Note sent <%= activity_date %>">
             </td>
             <td style="min-width:400px;">
               <table border="0" cellspacing="0" cellpadding="0" bgcolor="#ffefb8" style="padding:0;border:0;width:100%;border-spacing:0;border-collapse:collapse;text-align:left;margin:4px 0!important;background-color:#ffefb8;">

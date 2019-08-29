@@ -156,7 +156,7 @@
         <% if a.category == Activity::CATEGORY[:Conversation] %>
         <!-- Conversation -->
           <td style="padding-top:5px;padding-right:5px;min-width:30px;max-width:35px;">
-            <img src="<%= root_url %>/assets/images/icons/conversation_icon.png" alt="Conversation" title="Conversation - <%= Time.zone.at(a.last_sent_date).strftime("%b %-d, %Y %I:%M%p %Z") %>">
+            <img src="https://app.contextsmith.com/assets/images/icons/conversation_icon.png" alt="Conversation" title="Conversation - <%= Time.zone.at(a.last_sent_date).strftime("%b %-d, %Y %I:%M%p %Z") %>">
           </td>
           <td style="min-width:400px;">
             <table border="0" cellspacing="0" cellpadding="0" style="padding:5px 15px;border:0;width:100%;border-spacing:0;border-collapse:separate;text-align:left;margin:4px 0!important;border-radius:8px;background-color:#F0F6FB;">
@@ -183,7 +183,7 @@
         <% elsif a.category == Activity::CATEGORY[:Note] %>
         <!-- Note -->
           <td style="padding-top:5px;padding-right:5px;min-width:30px;max-width:35px;">
-            <img src="<%= root_url %>/assets/images/icons/note_icon.png" alt="Note" title="<%= Time.zone.at(a.last_sent_date).strftime("%l:%M%P") %>">
+            <img src="https://app.contextsmith.com/assets/images/icons/note_icon.png" alt="Note" title="<%= Time.zone.at(a.last_sent_date).strftime("%l:%M%P") %>">
           </td>
           <td style="min-width:400px;">
             <table border="0" cellspacing="0" cellpadding="0" bgcolor="#ffefb8" style="padding:0;border:0;width:100%;border-spacing:0;border-collapse:collapse;text-align:left;margin:4px 0!important;background-color:#ffefb8;">
@@ -213,7 +213,7 @@
         <% elsif a.category == Activity::CATEGORY[:Meeting] %>
         <!-- Meeting -->
           <td style="padding-top:5px;padding-right:5px;min-width:30px;max-width:35px;">
-            <img src="<%= root_url %>/assets/images/icons/meeting_icon.png" alt="Meeting">
+            <img src="https://app.contextsmith.com/assets/images/icons/meeting_icon.png" alt="Meeting">
           </td>
           <td style="min-width:400px;">
 
@@ -236,7 +236,7 @@
         <% elsif a.category == Activity::CATEGORY[:NextSteps] %>
         <!-- Next Steps -->
           <td style="padding-top:5px;padding-right:5px;min-width:30px;max-width:35px;">
-            <img src="<%= root_url %>/assets/images/icons/nextsteps_icon.png" alt="Next Steps" title="<%= Time.zone.at(a.last_sent_date).strftime("%l:%M%P") %>">
+            <img src="https://app.contextsmith.com/assets/images/icons/nextsteps_icon.png" alt="Next Steps" title="<%= Time.zone.at(a.last_sent_date).strftime("%l:%M%P") %>">
           </td>
           <td style="min-width:400px;">
             <table border="0" cellspacing="0" cellpadding="0" bgcolor="#EEE" style="padding:0;border:0;width:100%;border-spacing:0;border-collapse:collapse;text-align:left;margin:4px 0!important;background-color:#F0F7FC;">
@@ -253,7 +253,7 @@
         <% elsif a.category == Activity::CATEGORY[:JIRA] %>
         <!-- JIRA -->
           <td style="padding-top:5px;padding-right:5px;min-width:30px;max-width:35px;">
-            <img src="<%= root_url %>/assets/images/icons/JIRA_icon.png" alt="JIRA" title="<%= Time.zone.at(a.last_sent_date).strftime("%l:%M%P") %>">
+            <img src="https://app.contextsmith.com/assets/images/icons/JIRA_icon.png" alt="JIRA" title="<%= Time.zone.at(a.last_sent_date).strftime("%l:%M%P") %>">
           </td>
           <td style="min-width:400px;">
 
@@ -276,7 +276,7 @@
         <% elsif a.category == Activity::CATEGORY[:Zendesk] %>
         <!-- Zendesk -->
           <td style="padding-top:5px;padding-right:5px;min-width:30px;max-width:35px;">
-            <img src="<%= root_url %>/assets/images/icons/Zendesk_icon.png" alt="Zendesk">
+            <img src="https://app.contextsmith.com/assets/images/icons/Zendesk_icon.png" alt="Zendesk">
           </td>
           <td style="min-width:400px;">
             <table border="0" cellspacing="0" cellpadding="0" style="padding:5px 15px;border:0;width:100%;border-spacing:0;border-collapse:separate;text-align:left;margin:4px 0!important;border-radius:8px;border:1px solid #bbbbbb;">
@@ -299,7 +299,7 @@
         <% elsif a.category == Activity::CATEGORY[:Salesforce] %>
         <!-- Salesforce -->
           <td style="padding-top:5px;padding-right:5px;min-width:30px;max-width:35px;">
-            <img src="<%= root_url %>/assets/images/icons/Salesforce_icon.png" alt="Salesforce">
+            <img src="https://app.contextsmith.com/assets/images/icons/Salesforce_icon.png" alt="Salesforce">
           </td>
           <td style="min-width:400px;">
             <table border="0" cellspacing="0" cellpadding="0" style="padding:5px 15px;border:0;width:100%;border-spacing:0;border-collapse:separate;text-align:left;margin:4px 0!important;border-radius:8px;border:1px solid #bbbbbb;">
@@ -321,7 +321,7 @@
         <% elsif a.category == Activity::CATEGORY[:Alert] %>
         <!-- Alert -->
           <td style="padding-top:5px;padding-right:5px;min-width:30px;max-width:35px;">
-            <img src="<%= root_url %>/assets/images/icons/alert_icon.png" alt="Alert">
+            <img src="https://app.contextsmith.com/assets/images/icons/alert_icon.png" alt="Alert">
           </td>
           <td style="min-width:400px;">
 
