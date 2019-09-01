@@ -1,5 +1,5 @@
 <div class="row wrapper border-bottom white-bg page-heading">
-    <div class="col-lg-10">
+    <div class="col-md-10">
         <h2>Opportunities Dashboard</h2>
     </div>
 </div>
@@ -23,7 +23,8 @@
             <!--<option < % if params[:category] == v %> selected < % end %> >< %= v %></option>-->
           <!--< % end %>-->
       <!--</select>-->
-      <form class="col-md-3" method='get' id='multiselect-filter-form' style="padding: 0 5px 0 0px">
+    <div class="col-md-4">
+      <form class="col-md-10" method='get' id='multiselect-filter-form' style="padding: 0 5px 0 0px">
         <!-- Owner -->
         <select id="owner-filter" class="category_filter" multiple data-placeholder="  Select Owner" style="width: 100%">
             <option value="None"></option> <!-- no filter -->
@@ -38,6 +39,8 @@
             <option value="None" <% if params[:owner].include? "None" %> selected  <% end %> >Unassigned</option>
         </select>
       </form>
+    </div>
+    <div class="col-md-8">
       <select id="close-date-filter" class="category_filter col-md-3" data-placeholder="Select Close Date">
           <option value="Any"></option> <!-- no filter -->
           <optgroup label="By Close Date">
@@ -57,18 +60,18 @@
       <!-- <div class="col-md-3"></div> -->
       <button style="border-radius: 5px; margin-left: 1em; padding: 5px 10px" onclick="setFilterParamsAndRefreshData();"><strong>Apply all filters&nbsp;</strong><i class="fa fa-filter" aria-hidden="true"></i></button>
       <button style="border-radius: 5px; margin-left: 1em; padding: 5px 10px" title="Reset filters" onclick="resetFilters();"><strong>Reset filters</strong></button>
-
+    </div>
   </div>
 
   <!-- Top Dashboard Panel: (3) Salesforce-linked Forecast and Stage reports -->
   <div class="row border-bottom ">
-      <div class="col-lg-3">
+      <div class="col-md-3">
           <div class="ibox float-e-margins">
               <div id="closedwon-box"></div>
           </div>
       </div>
 
-      <div class="col-lg-3">
+      <div class="col-md-3">
           <div class="ibox float-e-margins">
               <div class='ibox-title'>
                   <h5>Deals by Forecast <small>(Click bar to filter)</small></h5>
@@ -77,7 +80,7 @@
           </div>
       </div>
 
-      <div class="col-lg-6">
+      <div class="col-md-6">
           <div class="ibox float-e-margins">
               <div class='ibox-title'>
                   <h5>Deals by Stage <small>(Click bar to filter)</small></h5>
@@ -89,9 +92,9 @@
 
   <div class="row border-bottom white-bg dashboard-header">
       <!-- LEFT (metric sort) -->
-      <div class="col-lg-5">
+      <div class="col-md-5">
           <h4 class="m-l-md">Metric:
-              <select id="sort-type" class="metric_filter col-lg-8" data-placeholder="Select Metric">
+              <select id="sort-type" class="metric_filter col-md-8" data-placeholder="Select Metric">
               <% ReportsController::ACCOUNT_DASHBOARD_METRIC.each do |k,label| %>
                   <option <%= "selected" if params[:sort] == label %>><%= label %></option>
               <% end %>
@@ -102,7 +105,7 @@
       </div>
 
       <!-- RIGHT (account/opportunity detail) -->
-      <div class="col-lg-7" style="margin-top:45px">
+      <div class="col-md-7" style="margin-top:45px">
           <div id="account-data">
               <div class="row" style="margin-top:50px">
                   <h3>&larr; Click on a bar/label to see details about the opportunity.</h3>
