@@ -1,13 +1,10 @@
 class UserMailer < ApplicationMailer
   add_template_helper(MailerHelper)
 
-  def welcome_email(user, num_of_projects, url)
+  def welcome_email(user)
     @user = user
-    @num_of_projects = num_of_projects
-    @url = url
 
-    track user: user # ahoy_email tracker
-    mail(to: @user.email, subject: "Your Accounts are created in ContextSmith")
+    mail(to: @user.email, subject: "Welcome to ContextSmith", from: "will@contextsmith.com")
   end
 
   def daily_summary_email(user)

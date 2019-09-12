@@ -232,6 +232,10 @@ class User < ActiveRecord::Base
       if referral_code
         PlansService.referral(referral_code)
       end
+
+      # Sending welcome email
+      puts "Sending onboarding email to #{user.email}"
+      UserMailer.welcome_email(user).deliver_later
     end
 
     user.maybe_upgrade # do we have to upgrade the user as the organization plan is available
