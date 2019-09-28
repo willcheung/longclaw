@@ -252,6 +252,7 @@ class User < ActiveRecord::Base
     org = Organization.create_or_update_user_organization(domain, user)
     user.organization_id = org.id
 
+    user.save!
     user
   end
 
