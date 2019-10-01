@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20190112063451) do
+ActiveRecord::Schema.define(version: 20190930183618) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -474,15 +474,15 @@ ActiveRecord::Schema.define(version: 20190112063451) do
   end
 
   create_table "users", id: :uuid, default: "uuid_generate_v4()", force: :cascade do |t|
-    t.string   "first_name",             default: "",    null: false
-    t.string   "last_name",              default: "",    null: false
-    t.string   "email",                  default: "",    null: false
-    t.string   "encrypted_password",     default: "",    null: false
+    t.string   "first_name",                default: "",    null: false
+    t.string   "last_name",                 default: "",    null: false
+    t.string   "email",                     default: "",    null: false
+    t.string   "encrypted_password",        default: "",    null: false
     t.string   "image_url"
     t.string   "reset_password_token"
     t.datetime "reset_password_sent_at"
     t.datetime "remember_created_at"
-    t.integer  "sign_in_count",          default: 0,     null: false
+    t.integer  "sign_in_count",             default: 0,     null: false
     t.datetime "current_sign_in_at"
     t.datetime "last_sign_in_at"
     t.inet     "current_sign_in_ip"
@@ -494,7 +494,7 @@ ActiveRecord::Schema.define(version: 20190112063451) do
     t.datetime "oauth_expires_at"
     t.uuid     "organization_id"
     t.string   "department"
-    t.boolean  "is_disabled",            default: false, null: false
+    t.boolean  "is_disabled",               default: false, null: false
     t.datetime "created_at"
     t.datetime "updated_at"
     t.datetime "invitation_created_at"
@@ -503,13 +503,16 @@ ActiveRecord::Schema.define(version: 20190112063451) do
     t.datetime "cluster_create_date"
     t.datetime "cluster_update_date"
     t.string   "title"
-    t.string   "time_zone",              default: "UTC"
-    t.boolean  "mark_private",           default: false, null: false
+    t.string   "time_zone",                 default: "UTC"
+    t.boolean  "mark_private",              default: false, null: false
     t.string   "role"
-    t.boolean  "refresh_inbox",          default: true,  null: false
+    t.boolean  "refresh_inbox",             default: true,  null: false
     t.string   "encrypted_password_iv"
     t.string   "billing_email"
     t.string   "stripe_customer_id"
+    t.boolean  "email_weekly_tracking",     default: true
+    t.boolean  "email_onboarding_campaign", default: true
+    t.boolean  "email_new_features",        default: true
   end
 
   add_index "users", ["email"], name: "index_users_on_email", unique: true, using: :btree

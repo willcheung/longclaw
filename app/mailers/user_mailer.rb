@@ -4,7 +4,15 @@ class UserMailer < ApplicationMailer
   def welcome_email(user)
     @user = user
 
+    puts "Emailing welcome email to #{user.email}"
     mail(to: @user.email, subject: "Welcome to ContextSmith", from: "will@contextsmith.com")
+  end
+
+  def weekly_tracking_summary(user)
+    @user = user
+
+    puts "Emailing weekly tracking summary to #{user.email}"
+    mail(to: user.email, subject: "Weekly email tracking summary: #{1.week.ago.strftime('%b %d')} - #{Time.current.yesterday.strftime('%b %d')}")
   end
 
   def daily_summary_email(user)

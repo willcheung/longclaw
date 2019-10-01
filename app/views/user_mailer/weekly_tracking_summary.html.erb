@@ -1,0 +1,47 @@
+<!-- Header -->
+<table class="row" border="0" cellspacing="0" cellpadding="0" style="margin:0;padding:0;border:0;text-align:left;border-collapse:collapse;border-spacing:0">
+  <tr>
+  <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;padding:0;border-spacing:0;color:#000000;width:49%;vertical-align:middle"><hr style="margin:0;padding:0;border:none;border-bottom:3px solid #e5e5e5"></td>
+    <th class="center" style="width:2%;padding:0 10px;white-space:nowrap;vertical-align:middle">
+      <center>
+        <h1 style="font-size:32px;font-weight:200;color:#222222;line-height:normal;text-align:center;margin:0 auto">
+          Weekly Summary<br>
+          <span style="font-weight:normal;font-size:16px;font-weight:200;color:#222222;"><%= 1.week.ago.strftime('%A, %B %d') + ' - ' + Time.current.yesterday.strftime('%A, %B %d') %></span>
+        </h1>
+      <center>
+    </th>
+    <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;padding:0;border-spacing:0;color:#000000;width:49%;vertical-align:middle"><hr style="margin:0;padding:0;border:none;border-bottom:3px solid #e5e5e5"></td>
+  </tr>
+</table>
+<div style="width:100%;padding-bottom:20px"></div>
+
+
+
+
+
+
+<!-- Customer Feedback request -->
+<table class="row callout" style="border-spacing: 0; border-collapse: collapse; vertical-align: top; text-align: left; width: 100%; position: relative; display: block; padding: 0px; margin-bottom: 20px;">
+  <tr style="vertical-align: top; text-align: left; padding: 0;" align="left">
+     <td class="wrapper last" align="left" valign="top">
+        <table class="twelve columns">
+           <tr align="left">
+              <td class="panel" style="word-break: break-word; -webkit-hyphens: auto; -moz-hyphens: auto; hyphens: auto; border-collapse: collapse !important; vertical-align: top; text-align: left; color: #222222; line-height: 19px; font-size: 14px; background: #ECF8FF; margin: 0; padding: 10px; border: 1px solid #b9e5ff;" align="left" bgcolor="#ECF8FF" valign="top">
+                 <p style="color: #222222;font-weight: normal; text-align: left; line-height: 19px; font-size: 14px; margin: 0 0 10px; padding: 0;" align="left">
+                  Want to receive your team's task summary in this e-mail? 
+                  <a href="<%= settings_url %>" style="background-color:#3C8DC5;border-radius:4px;color:#ffffff;display:inline-block;font-family:sans-serif;font-size:13px;font-weight:bold;line-height:25px;text-align:center;text-decoration:none;width:90px;-webkit-text-size-adjust:none;">Invite team</a>
+                  <br/><br/>
+                  How can we make ContextSmith more useful for you? We'd love to hear your feedback! Please send us a note at <a style="color: #2ba6cb; text-decoration: none;" href="mailto:support@contextsmith.com?subject=Feedback!">support@contextsmith.com</a> or follow us on <a style="color: #2ba6cb; text-decoration: none;" href="https://twitter.com/ContextSmith" target="_blank">Twitter</a> for updates.
+                </p>
+              </td>
+              <td class="expander"></td>
+           </tr>
+        </table>
+     </td>
+  </tr>
+</table>
+
+<table class="row" border="0" cellspacing="0" cellpadding="0" style="margin:0;padding:0;border:0;text-align:left;border-collapse:collapse;border-spacing:0">
+<tr><td><p style="color:#333;font-weight: normal; text-align: left; line-height: 20px; font-size: 14px; margin: 0 0 10px; padding: 0;" align="center">
+<p style="font-size:12px"><a target="_blank" href="<%= authenticated_root_url %>#opportunities"><span style="text-decoration:underline">Click here</span></a> change email settings.</p>
+</p></td></tr></table>
