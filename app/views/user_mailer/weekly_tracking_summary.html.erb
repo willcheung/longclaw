@@ -40,7 +40,7 @@
         <tr>
           <td style="font-weight:normal;color:#555;vertical-align:middle">
             <span>
-              <strong><%= t.recipients.join(',') %></strong> opened your email <strong><%= link_to t.subject, "https://mail.google.com/mail/u/0/#sent/#{t.email_id}", data: {skip_utm_params: true}, target: "_blank" %></strong> that you sent <strong><%= time_ago_in_words(t.sent_at) %></strong><br/>
+              <strong><%= t.recipients.join(',') %></strong> opened your email <strong><%= link_to t.subject, "https://mail.google.com/mail/u/0/#sent/#{t.email_id}", data: {skip_utm_params: true}, target: "_blank" %></strong> that you sent <strong><%= time_ago_in_words(t.sent_at) %> ago</strong><br/>
             </span>
             <span style="color:grey; margin-left:6px">  
               Opened <%= pluralize(t.tracking_events.count, 'time') %>:<br/>
@@ -128,7 +128,7 @@
           <tr>
             <td style="font-weight:normal;color:#555;vertical-align:middle">
               <span>
-                <strong><%= t.recipients.join(',') %></strong> didn't open your email <strong><%= t.subject %></strong> that you sent <strong><%= time_ago_in_words(t.sent_at) %></strong><br/>
+                <strong><%= t.recipients.join(',') %></strong> didn't open your email <strong><%= t.subject %></strong> that you sent <strong><%= time_ago_in_words(t.sent_at) %> ago</strong><br/>
               </span>
             </td>
             <td class="expander"></td>
