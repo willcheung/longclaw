@@ -30,7 +30,7 @@ class UserMailer < ApplicationMailer
 
     @unopened = TrackingRequest.find_by_sql("SELECT user_id,subject,sent_at,recipients, email_id, count(e.id) as cnt 
                   FROM tracking_requests r left outer join tracking_events e on e.tracking_id = r.tracking_id 
-                  WHERE r.user_id='#{user.id}' AND r.sent_date > NOW() - interval '7' day group by 1,2,3,4,5 having count(e.id) = 0;")
+                  WHERE r.user_id='#{user.id}' AND r.sent_at > NOW() - interval '7' day group by 1,2,3,4,5 having count(e.id) = 0;")
 
 
     puts "Emailing weekly tracking summary to #{user.email}"
