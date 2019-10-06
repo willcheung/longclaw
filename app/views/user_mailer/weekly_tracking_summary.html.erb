@@ -67,11 +67,11 @@
                           </td>
                           <td>
                             <% if e.place_name == "Gmail" %>
-                              &nbsp;<img src="https://app.contextsmith.com/assets/fa-gmail.png" width="15" height="15" border="0" style="display:block"/>&nbsp;Gmail
+                              &nbsp;<img src="https://app.contextsmith.com/assets/fa-gmail.png" width="15" height="15" border="0"/>&nbsp;Gmail
                             <% elsif !e.place_name.present? %>
             
                             <% else %>
-                              <%= (link_to ("&nbsp;<img src=\"https://app.contextsmith.com/assets/fa-map-marker.png\" width=\"15\" height=\"15\" border=\"0\" style=\"display:block\"/>&nbsp;" + e.place_name.sub(", United States", "")).html_safe, "https://maps.google.com/?q=#{e.place_name}", data: {skip_utm_params: true}, target: "_blank") %>
+                              <%= (link_to ("&nbsp;<img src=\"https://app.contextsmith.com/assets/fa-map-marker.png\" width=\"15\" height=\"15\" border=\"0\"/>&nbsp;" + e.place_name.sub(", United States", "")).html_safe, "https://maps.google.com/?q=#{e.place_name}", data: {skip_utm_params: true}, target: "_blank") %>
                             <% end %>
                           </td>
                           <td>
