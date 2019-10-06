@@ -10,6 +10,7 @@ class PlansController < ApplicationController
     #current_user.downgrade!
     #current_user.upgrade(:Plus)
 
+    # TEST sending weekly email
     UserMailer.weekly_tracking_summary(current_user).deliver_later
 
     if current_user.stripe_customer_id

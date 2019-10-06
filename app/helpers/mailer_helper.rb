@@ -42,9 +42,9 @@ module MailerHelper
       "on #{domain} network"
     elsif user_agent.os.to_s.include? "Mac OS X"
       if domain == ""
-        "<img src=\"https://app.contextsmith.com/assets/fa-desktop.png\" width=\"15\" height=\"15\" border=\"0\" style=\"display:block\"/> Mac".html_safe
+        "<img src=\"https://app.contextsmith.com/assets/fa-desktop.png\" width=\"15\" height=\"15\" border=\"0\" style=\"display:block\"/>&nbsp; Mac".html_safe
       else
-        "<img src=\"https://app.contextsmith.com/assets/fa-desktop.png\" width=\"15\" height=\"15\" border=\"0\" style=\"display:block\"/> Mac on #{domain} network".html_safe
+        "<img src=\"https://app.contextsmith.com/assets/fa-desktop.png\" width=\"15\" height=\"15\" border=\"0\" style=\"display:block\"/>&nbsp; Mac on #{domain} network".html_safe
       end
     elsif user_agent.os.to_s.include? "Windows"
       if domain == ""
@@ -54,9 +54,9 @@ module MailerHelper
       end
     else
       if domain == ""
-        ("<img src=\"https://app.contextsmith.com/assets/fa-mobile.png\" width=\"15\" height=\"15\" border=\"0\" style=\"display:block\"/>" + user_agent.device.to_s).html_safe
+        ("<img src=\"https://app.contextsmith.com/assets/fa-mobile.png\" width=\"15\" height=\"15\" border=\"0\" style=\"display:block\"/>&nbsp;" + user_agent.device.to_s).html_safe
       else
-        ("<img src=\"https://app.contextsmith.com/assets/fa-mobile.png\" width=\"15\" height=\"15\" border=\"0\" style=\"display:block\"/>" + user_agent.device.to_s + " on #{domain} network").html_safe
+        ("<img src=\"https://app.contextsmith.com/assets/fa-mobile.png\" width=\"15\" height=\"15\" border=\"0\" style=\"display:block\"/>&nbsp;" + user_agent.device.to_s + " on #{domain} network").html_safe
       end
     end
   end
