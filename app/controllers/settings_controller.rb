@@ -1,24 +1,22 @@
 class SettingsController < ApplicationController
-	before_filter :get_basecamp2_user, only: ['basecamp','basecamp2_projects', 'basecamp2_activity']
 	before_filter :get_salesforce_admin_user, only: ['index', 'salesforce_accounts', 'salesforce_opportunities', 'salesforce_activities', 'salesforce_fields']
 	around_action :check_if_super_admin, only: ['super_user', 'user_analytics']
 
 	def index
 		@user_count = current_user.organization.users.count
-		@registered_user_count = current_user.organization.users.registered.count
-		@basecamp2_user = OauthUser.find_by(oauth_provider: 'basecamp2', organization_id: current_user.organization_id)
 
-		if (@salesforce_user.nil? && # could not connect via organization/admin login
-				current_user.power_or_trial_only?)  # AND is an individual (power user or trial/Chrome user)
-			@individual_salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: current_user.organization_id, user_id: current_user.id) || OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: current_user.organization_id, user_id: current_user.id)
-		end
+		# if (@salesforce_user.nil? && # could not connect via organization/admin login
+		# 		current_user.power_or_trial_only?)  # AND is an individual (power user or trial/Chrome user)
+		# 	@individual_salesforce_user = OauthUser.find_by(oauth_provider: 'salesforce', organization_id: current_user.organization_id, user_id: current_user.id) || OauthUser.find_by(oauth_provider: 'salesforcesandbox', organization_id: current_user.organization_id, user_id: current_user.id)
+		# end
 
 		@current_user_projects = current_user.projects.where('projects.is_confirmed = true AND projects.status = \'Active\'')
 		@current_user_subscriptions = current_user.valid_streams_subscriptions
 	end
 
 	def users
-		@users = current_user.organization.users.non_alias
+		#@users = current_user.organization.users.non_alias
+		@users = current_user.organization.users
 	end
 
 	def alerts
@@ -187,32 +185,6 @@ class SettingsController < ApplicationController
 		end
 	end
 
-	def basecamp
-		@basecamp2_user = OauthUser.find_by(oauth_provider: 'basecamp2', organization_id: current_user.organization_id)
-		# Filter only the users Accounts
-		@opportunities = Project.visible_to_admin(current_user.organization_id).is_active
-		# @accounts = Account.eager_load(:projects, :user).where('accounts.organization_id = ? and (projects.id IS NULL OR projects.is_public=true OR (projects.is_public=false AND projects.owner_id = ?))', current_user.organization_id, current_user.id).order("lower(accounts.name)")
-		callback_pin = params[:code]
-		# Check if Oauth_user has been created
-		if @basecamp2_user == nil && callback_pin
-			# Check if User exist in our database
-			# This Creates a new Oauth_user
-			begin
-				OauthUser.basecamp2_create_user(callback_pin, current_user.organization_id, current_user.id)
-			rescue
-				#code that deals with some exception
-				flash[:warning] = "Sorry something went wrong"
-			else
-				#code that runs only if (no) excpetion was raised
-				flash[:notice] = "Connected to BaseCamp2"
-			end
-		end
-	end
-
-	def basecamp2_projects
-			@accounts = Project.where(account_id: params[:account_id]).where(organization_id:current_user.organization_id)
-	end
-
 	def super_user
 		@contextsmith_team = User.where("email LIKE '%contextsmith.com' ")
 		@toggle_org = Organization.is_active.where("LOWER(name) NOT LIKE '%gmail.com'") 
@@ -254,16 +226,6 @@ class SettingsController < ApplicationController
 	# Gets SFDC connection for Organization (a single, shared SFDC admin login for all admins)
 	def get_salesforce_admin_user
 		@salesforce_user = SalesforceController.get_sfdc_oauthuser(organization: current_user.organization) if current_user.admin? # only allow admins to access SFDC Admin panels
-	end
-
-  def get_basecamp2_user
-		@basecamp2_user = OauthUser.find_by(oauth_provider: 'basecamp2', organization_id: current_user.organization_id)
-		# @basecamp2_user = nil
-		if @basecamp2_user
-			# Look to find only the current users connections
-			@basecamp_connections = Integration.find_basecamp_connections
-			@basecamp_projects = OauthUser.basecamp2_projects(@basecamp2_user['oauth_access_token'], @basecamp2_user['oauth_instance_url'])
-		end
 	end
 
 	def check_if_super_admin

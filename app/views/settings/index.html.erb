@@ -20,10 +20,10 @@
                 <ul class="list-group clear-list">
 <!--                     <li class="list-group-item first-item"><strong>My Title:</strong> <%= best_in_place current_user, :title, :as => 'input', :place_holder => '(none)', :activator => "#title-activator" %><i id="title-activator" class="fa fa-pencil bip_activator text-mute-gray m-l-xs"></i></li>
                     <li class="list-group-item"><strong>My Department:</strong> <%= best_in_place current_user, :department, :as => 'input', :place_holder => '(none)', :activator => "#dept-activator" %><i id="dept-activator" class="fa fa-pencil bip_activator text-mute-gray m-l-xs"></i></li>
- -->                    <li class="list-group-item"><strong>My Plan:</strong> <%= current_user.role %>  
+ -->                 <li class="list-group-item">My Plan:<strong> <%= current_user.role %> </strong>
+                        <span style="font-size:12px;margin-left:10px"><a href="/plans/new">Change plan</a></span>
                         <% if current_user.superadmin? %><i style="color: gold" class="fa fa-star" data-toggle="tooltip" data-placement="top" data-original-title="Superadmin!"></i><% end %>
                     </li>
-                    <li class="list-group-item"><strong>Email and calendar refresh:</strong> <%= current_user.refresh_inbox %> <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Whether inbox and calendar are connected. Only Admin can change this."></i></li>
                 </ul>
             </div>
             <div class="col-md-6">
@@ -39,23 +39,32 @@
         <h1>My Integrations </h1>
         <div class="row">
             <div class="col-md-4">
-            <div class="ibox-content text-center">
-                <h1>Salesforce</h1>
-                <div class="m-b-sm">
-                    <img src="assets/images/salesforce.png"/ style="height:75px;"/>
+                <div class="ibox-content text-center">
+                    <h1>Coming soon</h1>
+                    <div class="m-b-sm">
+                        <img src="assets/images/slack.png"/ style="height:75px;"/>
+                    </div>
+                        <p>Send all notifications to Slack</p>
                 </div>
-
-                <% if @individual_salesforce_user.nil? %>
-                    <a class="btn btn-primary btn-sm" style="font-size:12px;" href="<%= user_omniauth_auth_helper_path(provider: "salesforce") %>">Log in to Salesforce</a> <a class="btn btn-primary btn-sm" style="font-size:12px; display: none" href="/users/auth/salesforcesandbox">Log in to Salesforce Sandbox</a> <br>
-                <% else %>
-                    <p>Connected as <%= @individual_salesforce_user.oauth_user_name %></p><p><a class="btn btn-danger btn-sm btn-outline" style="font-size:12px;" href="<%= salesforce_disconnect_path(id: @individual_salesforce_user.id) %>">Disconnect!</a></p></p>
-                <% end %>
             </div>
-        </div>
+            <!-- <div class="col-md-4">
+                <div class="ibox-content text-center">
+                    <h1>Salesforce</h1>
+                    <div class="m-b-sm">
+                        <img src="assets/images/salesforce.png"/ style="height:75px;"/>
+                    </div>
+
+                    <% if @individual_salesforce_user.nil? %>
+                        <a class="btn btn-primary btn-sm" style="font-size:12px;" href="<%= user_omniauth_auth_helper_path(provider: "salesforce") %>">Log in to Salesforce</a> <a class="btn btn-primary btn-sm" style="font-size:12px; display: none" href="/users/auth/salesforcesandbox">Log in to Salesforce Sandbox</a> <br>
+                    <% else %>
+                        <p>Connected as <%= @individual_salesforce_user.oauth_user_name %></p><p><a class="btn btn-danger btn-sm btn-outline" style="font-size:12px;" href="<%= salesforce_disconnect_path(id: @individual_salesforce_user.id) %>">Disconnect!</a></p></p>
+                    <% end %>
+                </div>
+            </div> -->
         </div>
     <% end %>
 
-    <h1>Organization Settings</h1>
+    <h1>Team Settings</h1>
     <div class="row">
         <div class="col-md-4">
             <div class="ibox-content text-center">
@@ -64,7 +73,7 @@
                     <i class="fa fa-users fa-4x"></i>
                 </div>
                 
-                <p><%= @user_count %> total users, <%= @registered_user_count %> registered users</p>
+                <p><%= @user_count %> users in your team
                 <p><a href="<%= settings_users_path %>">Manage users</a></p>
 
             </div>
@@ -99,7 +108,7 @@
                     <p><a href="<%= settings_custom_fields_path %>">Edit custom fields</a></p>
                     <p><a href="<%= settings_custom_lists_path %>">Edit custom lists</a></p>
                 <% else %>
-                    <p>Only Admin role can access this page</p>
+                    <p>Only Pro plans can access this page</p>
                 <% end %>
 
             </div>

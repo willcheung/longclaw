@@ -32,4 +32,32 @@ module MailerHelper
       return true
     end
   end
+
+  def user_agent_helper(ua, domain)
+    parser = UserAgentParser::Parser.new
+    #parser.parse("Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.1; WOW64; Trident/6.0; SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET CLR 3.0.30729; Media Center PC 6.0; .NET4.0C; .NET4.0E; Microsoft Outlook 16.0.8326; Microsoft Outlook 16.0.8326; ms-office; MSOffice 16)").os
+    user_agent = parser.parse(ua)
+
+    if user_agent.device.to_s == 'Other'
+      "on #{domain} network"
+    elsif user_agent.os.to_s.include? "Mac OS X"
+      if domain == ""
+        "<img src=\"https://app.contextsmith.com/assets/fa-desktop.png\" width=\"15\" height=\"15\" border=\"0\" style=\"display:block\"/> Mac".html_safe
+      else
+        "<img src=\"https://app.contextsmith.com/assets/fa-desktop.png\" width=\"15\" height=\"15\" border=\"0\" style=\"display:block\"/> Mac on #{domain} network".html_safe
+      end
+    elsif user_agent.os.to_s.include? "Windows"
+      if domain == ""
+        "Windows"
+      else
+        "Windows on #{domain} network"
+      end
+    else
+      if domain == ""
+        ("<img src=\"https://app.contextsmith.com/assets/fa-mobile.png\" width=\"15\" height=\"15\" border=\"0\" style=\"display:block\"/>" + user_agent.device.to_s).html_safe
+      else
+        ("<img src=\"https://app.contextsmith.com/assets/fa-mobile.png\" width=\"15\" height=\"15\" border=\"0\" style=\"display:block\"/>" + user_agent.device.to_s + " on #{domain} network").html_safe
+      end
+    end
+  end
 end

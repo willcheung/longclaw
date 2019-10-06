@@ -10,6 +10,8 @@ class PlansController < ApplicationController
     #current_user.downgrade!
     #current_user.upgrade(:Plus)
 
+    UserMailer.weekly_tracking_summary(current_user).deliver_later
+
     if current_user.stripe_customer_id
       customer = Stripe::Customer.retrieve(current_user.stripe_customer_id, :expand => 'subscriptions')
       @subscription = customer.subscriptions.first if customer.subscriptions.first

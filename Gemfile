@@ -25,14 +25,12 @@ gem 'puma'                        # Web server
 gem 'acts_as_commentable'
 gem 'pg_search'
 gem 'attr_encrypted', '~> 3.0.0'  # Encrypting private data!
-# gem 'paranoia', '~> 2.1', '>= 2.1.5'  # Soft Delete for Rails Models
 gem 'd3-rails', '~> 3.5'          # Use D3 for cool data visualizations
 gem 'slack-notifier'
 gem 'device_detector'
 gem 'geocoder'
 gem 'rack-cors', :require => 'rack/cors'
 gem 'graphql'
-#gem 'fullcontact', '~>0.18'
 gem 'mail'
 gem 'mini_mime'
 gem 'stripe'
@@ -44,6 +42,7 @@ gem 'ffi', '1.9.22'
 gem 'puma_worker_killer'
 gem 'aws-healthcheck'
 gem 'redis-rails'
+gem 'user_agent_parser'
 
 # Gems used only for assets and not required
 # in production environments by default.

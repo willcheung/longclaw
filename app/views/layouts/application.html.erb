@@ -64,7 +64,9 @@
         <!-- Page wraper -->
         <div id="page-wrapper" class="gray-bg <%= @extra_class %>">
 
+            <% if current_user.pro? %>
             <%= render 'layouts/topnavbar' %>
+            <% end %>
 
             <!-- Main view  -->
             <%= yield %>

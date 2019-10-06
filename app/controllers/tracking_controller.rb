@@ -27,7 +27,7 @@ class TrackingController < ApplicationController
   def list
     page = params[:page].present? ? params[:page] : 1
 
-    # last 30 days of emails sent + their history and emails opened + their history
+    # last 60 days of emails sent + their history and emails opened + their history
     sql_where = "tracking_requests.tracking_id in (
                  select tracking_id from tracking_requests where user_id='#{current_user.id}' and sent_at > NOW() - interval '60' day
                   UNION

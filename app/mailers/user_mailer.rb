@@ -11,6 +11,29 @@ class UserMailer < ApplicationMailer
   def weekly_tracking_summary(user)
     @user = user
 
+     # last 60 days of emails sent + their history and emails opened + their history
+    sql_where = "tracking_requests.tracking_id in (
+                   select tracking_id from tracking_requests where user_id='#{user.id}' and sent_at > NOW() - interval '60' day
+                    UNION
+                   select e.tracking_id from tracking_events e join tracking_requests r on e.tracking_id=r.tracking_id where date > NOW() - interval '60' day and r.user_id='#{user.id}')
+                 AND tracking_events.date > NOW() - interval '7' day"
+
+    # sql_where = "tracking_requests.tracking_id in (
+    #                select tracking_id from tracking_requests where user_id='06c1f3f8-723d-4e2d-aaa3-f955e44d7072' and sent_at > NOW() - interval '760' day
+    #                 UNION
+    #                select e.tracking_id from tracking_events e join tracking_requests r on e.tracking_id=r.tracking_id where date > NOW() - interval '760' day and r.user_id='06c1f3f8-723d-4e2d-aaa3-f955e44d7072')
+    #              AND tracking_events.date > NOW() - interval '760' day"
+
+    @trackings = TrackingRequest.includes(:tracking_events)
+                     .where(sql_where)
+                     .page(1)
+                     .order('tracking_events.date DESC NULLS LAST').order('sent_at DESC');
+
+    @unopened = TrackingRequest.find_by_sql("SELECT user_id,subject,sent_at,recipients, email_id, count(e.id) as cnt 
+                  FROM tracking_requests r left outer join tracking_events e on e.tracking_id = r.tracking_id 
+                  WHERE r.user_id='#{user.id}' AND e.date > NOW() - interval '7' day group by 1,2,3,4,5 having count(e.id) = 0;")
+
+
     puts "Emailing weekly tracking summary to #{user.email}"
     mail(to: user.email, subject: "Weekly email tracking summary: #{1.week.ago.strftime('%b %d')} - #{Time.current.yesterday.strftime('%b %d')}")
   end

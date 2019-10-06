@@ -16,20 +16,161 @@
 <div style="width:100%;padding-bottom:20px"></div>
 
 
+<!-- Title -->
+<table class="row" style="padding:0;margin:0;width:100%;border-collapse:collapse;">
+  <tbody style="width:100%;display:table;margin-top:2em">
+    <tr>
+      <td style="word-break:break-word;border-collapse:collapse;padding:0;vertical-align:top;text-align:left;border-bottom:1px solid #ccc;color:#333;font-family:Helvetica,Arial,sans-serif;font-weight:200;line-height:19px;margin:0;font-size:14px">
+        <h3 style="color:#333;font-family:Helvetica,Arial,sans-serif;font-weight:200;text-align:left;line-height:1.3;margin:0;padding:0;font-size:28px">Opened emails</h3>
+      </td>
+      <td style="word-break:break-word;border-collapse:collapse;padding:0;vertical-align:top;text-align:left;border-bottom:1px solid #ccc;width:0;color:#333;font-family:Helvetica,Arial,sans-serif;font-weight:200;line-height:19px;margin:0;font-size:14px"></td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- Tracking -->
+<div style="margin:0;font-size:14px;">
+<% if @trackings.empty? %>
+  <span style="margin:1em 0em;font-size:15px;font-weight:bold;color:#A1C436">No one opened your emails last week.</span>
+<% else %>
+  <% @trackings.each do |t| %>
+    <!-- List title/header -->
+    <table class="row" style="font-size:14px;padding:0;margin:0;width:100%;border-collapse:collapse;">
+      <tbody style="width:100%;display:table;margin-top:2em">
+        <tr>
+          <td style="font-weight:normal;color:#555;vertical-align:middle">
+            <span>
+              <strong><%= t.recipients.join(',') %></strong> opened your email <strong><%= link_to t.subject, "https://mail.google.com/mail/u/0/#sent/#{t.email_id}", data: {skip_utm_params: true}, target: "_blank" %></strong> that you sent <strong><%= time_ago_in_words(t.sent_at) %></strong><br/>
+            </span>
+            <span style="color:grey; margin-left:6px">  
+              Opened <%= pluralize(t.tracking_events.count, 'time') %>:<br/>
+            </span>
+          </td>
+          <td class="expander"></td>
+        </tr>
+      </tbody>
+    </table>
+    <!-- List alerts -->
+    <table border="0" cellspacing="0" cellpadding="0" style="padding:0;border:0;width:100%;border-spacing:0;border-collapse:collapse;text-align:left;margin:3px 4px!important">
+      <tbody>
+        <% t.tracking_events.each do |e| %>
+          <tr>
+            <td style="padding:0;">
+              <table>
+                <tr>
+                  <td style="text-align:left;font-size:15px;line-height:14px;border-collapse:collapse;border-spacing:0;vertical-align:top">
+                    <table border="0" cellpadding="0" cellspacing="0">
+                      <tbody style="color:#999;font-weight:normal;font-size:14px;line-height:15px;">
+                        <tr>
+                          <td> 
+                            &nbsp; <%= time_ago_in_words(e.date) %> ago &nbsp;
+                          </td>
+                          <td>
+                            <% if e.place_name == "Gmail" %>
+                              &nbsp;<img src="https://app.contextsmith.com/assets/fa-gmail.png" width="15" height="15" border="0" style="display:block"/>Gmail
+                            <% elsif !e.place_name.present? %>
+            
+                            <% else %>
+                              <%= (link_to ("&nbsp;<img src=\"https://app.contextsmith.com/assets/fa-map-marker.png\" width=\"15\" height=\"15\" border=\"0\" style=\"display:block\"/>" + e.place_name.sub(", United States", "")).html_safe, "https://maps.google.com/?q=#{e.place_name}", data: {skip_utm_params: true}, target: "_blank") %>
+                            <% end %>
+                          </td>
+                          <td>
+                            &nbsp;<%= user_agent_helper(e.user_agent, e.domain) %>.
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        <% end %> <!-- End: tracking_events -->
+      </tbody>
+    </table>
+  <% end %>  <!-- End: @trackings  -->
+<% end %> <!-- End: if @trackings.empty? -->
+</div>
+
+<div style="width:100%;padding-bottom:20px"></div>
+
+<!-- Title -->
+<table class="row" style="padding:0;margin:0;width:100%;border-collapse:collapse;">
+  <tbody style="width:100%;display:table;margin-top:2em">
+    <tr>
+      <td style="word-break:break-word;border-collapse:collapse;padding:0;vertical-align:top;text-align:left;border-bottom:1px solid #ccc;color:#333;font-family:Helvetica,Arial,sans-serif;font-weight:200;line-height:19px;margin:0;font-size:14px">
+        <h3 style="color:#333;font-family:Helvetica,Arial,sans-serif;font-weight:200;text-align:left;line-height:1.3;margin:0;padding:0;font-size:28px">Unopened emails</h3>
+      </td>
+      <td style="word-break:break-word;border-collapse:collapse;padding:0;vertical-align:top;text-align:left;border-bottom:1px solid #ccc;width:0;color:#333;font-family:Helvetica,Arial,sans-serif;font-weight:200;line-height:19px;margin:0;font-size:14px"></td>
+    </tr>
+    <tr>
+       <td style="font-weight:normal;padding:6px;text-align:left;font-size:11px;color:#888">
+        <i>These emails are tracked, but are unopened or recepient has blocked tracking.</i>
+      </td>
+    </tr>
+  </tbody>
+</table>
 
 
+<% if @unopened.empty? %>
+  <span style="margin:1em 0em;font-size:15px;font-weight:bold;color:#A1C436">No tracked emails sent last week.</span>
+<% else %>
+  <!-- Unopened Emails -->
+  <% @unopened.each do |t| %>
+      <!-- List title/header -->
+      <table class="row" style="font-size:14px;padding:0;margin:0;width:100%;border-collapse:collapse;">
+        <tbody style="width:100%;display:table;margin-top:1em">
+          <tr>
+            <td style="font-weight:normal;color:#555;vertical-align:middle">
+              <span>
+                <strong><%= t.recipients.join(',') %></strong> didn't open your email <strong><%= t.subject %></strong> that you sent <strong><%= time_ago_in_words(t.sent_at) %></strong><br/>
+              </span>
+            </td>
+            <td class="expander"></td>
+          </tr>
+        </tbody>
+      </table>
+    <% end %>
+  <% end %>
 
+
+<div style="width:100%;padding-bottom:20px"></div>
+
+<!-- Title -->
+<table class="row" style="padding:0;margin:0;width:100%;border-collapse:collapse;">
+  <tbody style="width:100%;display:table;margin-top:2em">
+    <tr>
+      <td style="word-break:break-word;border-collapse:collapse;padding:0;vertical-align:top;text-align:left;border-bottom:1px solid #ccc;color:#333;font-family:Helvetica,Arial,sans-serif;font-weight:200;line-height:19px;margin:0;font-size:14px">
+        <h3 style="color:#333;font-family:Helvetica,Arial,sans-serif;font-weight:200;text-align:left;line-height:1.3;margin:0;padding:0;font-size:28px">CRM activities</h3>
+      </td>
+      <td style="word-break:break-word;border-collapse:collapse;padding:0;vertical-align:top;text-align:left;border-bottom:1px solid #ccc;width:0;color:#333;font-family:Helvetica,Arial,sans-serif;font-weight:200;line-height:19px;margin:0;font-size:14px"></td>
+    </tr>
+  </tbody>
+</table>
+
+<table class="row" style="font-size:14px;padding:0;margin:0;width:100%;border-collapse:collapse;">
+    <tbody style="width:100%;display:table;margin-top:1em">
+      <tr style="line-height: 2em;">
+        Your (and your team's) CRM activities will show up here, such as new contacts and notes.
+      </tr>
+      <tr style="text-align:center">
+        <a target="_blank" href="https://app.contextsmith.com/plans/new" style="margin-top:10px;background-color:#3C8DC5;border-radius:4px;color:#ffffff;display:inline-block;font-family:sans-serif;font-size:13px;font-weight:bold;line-height:32px;text-align:center;text-decoration:none;width:200px;-webkit-text-size-adjust:none;">Upgrade and try CRM for free</a>
+      </tr>
+    </tbody>
+</table>
+
+<div style="width:100%;padding-bottom:20px"></div>
 
 <!-- Customer Feedback request -->
-<table class="row callout" style="border-spacing: 0; border-collapse: collapse; vertical-align: top; text-align: left; width: 100%; position: relative; display: block; padding: 0px; margin-bottom: 20px;">
+<table class="row callout" style="border-spacing: 0; border-collapse: collapse; vertical-align: top; text-align: left; width: 100%; position: relative; display: block; padding: 0px; margin-bottom: 20px;margin-top:30px;">
   <tr style="vertical-align: top; text-align: left; padding: 0;" align="left">
      <td class="wrapper last" align="left" valign="top">
         <table class="twelve columns">
            <tr align="left">
               <td class="panel" style="word-break: break-word; -webkit-hyphens: auto; -moz-hyphens: auto; hyphens: auto; border-collapse: collapse !important; vertical-align: top; text-align: left; color: #222222; line-height: 19px; font-size: 14px; background: #ECF8FF; margin: 0; padding: 10px; border: 1px solid #b9e5ff;" align="left" bgcolor="#ECF8FF" valign="top">
                  <p style="color: #222222;font-weight: normal; text-align: left; line-height: 19px; font-size: 14px; margin: 0 0 10px; padding: 0;" align="left">
-                  Want to receive your team's task summary in this e-mail? 
-                  <a href="<%= settings_url %>" style="background-color:#3C8DC5;border-radius:4px;color:#ffffff;display:inline-block;font-family:sans-serif;font-size:13px;font-weight:bold;line-height:25px;text-align:center;text-decoration:none;width:90px;-webkit-text-size-adjust:none;">Invite team</a>
+                  Have a team? Invite them to start sharing contacts and notes.
+                  <a href="https://app.contextsmith.com/settings/users" style="background-color:#3C8DC5;border-radius:4px;color:#ffffff;display:inline-block;font-family:sans-serif;font-size:13px;font-weight:bold;line-height:25px;text-align:center;text-decoration:none;width:90px;-webkit-text-size-adjust:none;">Invite team</a>
                   <br/><br/>
                   How can we make ContextSmith more useful for you? We'd love to hear your feedback! Please send us a note at <a style="color: #2ba6cb; text-decoration: none;" href="mailto:support@contextsmith.com?subject=Feedback!">support@contextsmith.com</a> or follow us on <a style="color: #2ba6cb; text-decoration: none;" href="https://twitter.com/ContextSmith" target="_blank">Twitter</a> for updates.
                 </p>
@@ -42,6 +183,6 @@
 </table>
 
 <table class="row" border="0" cellspacing="0" cellpadding="0" style="margin:0;padding:0;border:0;text-align:left;border-collapse:collapse;border-spacing:0">
-<tr><td><p style="color:#333;font-weight: normal; text-align: left; line-height: 20px; font-size: 14px; margin: 0 0 10px; padding: 0;" align="center">
-<p style="font-size:12px"><a target="_blank" href="<%= authenticated_root_url %>#opportunities"><span style="text-decoration:underline">Click here</span></a> change email settings.</p>
+<tr><td align="center">
+<p style="font-size:11px;color:#888;text-align:center;"><a target="_blank" href=""><span style="text-decoration:underline">Click here</span></a> change email settings.
 </p></td></tr></table>
