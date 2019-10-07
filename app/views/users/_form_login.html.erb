@@ -5,9 +5,9 @@
 
 <a id="google-login" style="width: 370px; height: 80px;" href="<%= user_omniauth_authorize_path(:google_oauth2, role: role, ref: params[:ref]) %>"><img class="google-oauth-btn" src="/assets/images/google_signin_buttons/web/btn_google_<%= (button_text == 'Sign in') ? 'signin' : 'signup' %>_dark_normal_web_custom.png" style="margin: 15px 0px" title="Sign in using Google"></a>
 
-<a id="o365-login" class="btn btn-lg btn-primary oauth" href="<%= user_omniauth_authorize_path(:microsoft_v2_auth, role: role) %>"><img src="/assets/images/office365-logo-white.png" width="40" height="40" />&nbsp;&nbsp;&nbsp;<span class="bold"><%= button_text %> Using Office365</span></a>
+<!-- <a id="o365-login" class="btn btn-lg btn-primary oauth" href="<%= user_omniauth_authorize_path(:microsoft_v2_auth, role: role) %>"><img src="/assets/images/office365-logo-white.png" width="40" height="40" />&nbsp;&nbsp;&nbsp;<span class="bold"><%= button_text %> Using Office365</span></a> -->
 
-<button id="outlook-login" class="btn btn-lg btn-primary oauth m-t-lg"><img src="/assets/images/outlook-logo-white.png" width="40" height="40" /></i>&nbsp;&nbsp;&nbsp;<span class="bold"><%= button_text %> Using Outlook</span></button>
+<!-- <button id="outlook-login" class="btn btn-lg btn-primary oauth m-t-lg"><img src="/assets/images/outlook-logo-white.png" width="40" height="40" /></i>&nbsp;&nbsp;&nbsp;<span class="bold"><%= button_text %> Using Outlook</span></button> -->
 
 <%= simple_form_for :user, url: url, remote: remote, html: {role: :form, 'data-model' => 'user', id: 'new_user', style: "display:none;", class: "form-horizontal"}, wrapper: :horizontal_form  do |f| %>
 
