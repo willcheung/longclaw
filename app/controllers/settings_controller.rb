@@ -15,7 +15,6 @@ class SettingsController < ApplicationController
 	end
 
 	def users
-		#@users = current_user.organization.users.non_alias
 		@users = current_user.organization.users
 	end
 

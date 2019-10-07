@@ -75,22 +75,6 @@ namespace :scheduler do
         end
     end
 
-    desc 'Retrieve latest BaseCamp2 Events for all projects in all organization'
-    task load_basecamp2_events: :environment do
-        if [0,6,12,18].include?(Time.now.hour) # Runs once every 6 hours
-            puts "\n\n=====Task (load_basecamp2_eventsload_basecamp2_events) started at #{Time.now}====="
-
-            Organization.is_active.each do |org|
-                org.oauth_users.basecamp_user.each do |user| 
-                    user.integrations.each do |integ|
-                        BasecampService.load_basecamp2_events_from_backend(user, integ)
-                        sleep(1)
-                    end
-                end
-            end
-        end
-    end
-
     desc 'Email daily project updates on weekdays'
     task :email_daily_summary, [:test] => :environment do |t, args|
         puts "\n\n=====Task (email_daily_summary) started at #{Time.now}====="
@@ -135,6 +119,25 @@ namespace :scheduler do
                     end
                 end
             end
+        end
+    end
+
+    desc 'Email weekly tracking summary on Sundays'
+    task :email_weekly_tracking_summary, [:test] => :environment do |t, args|
+        puts "\n\n=====Task (email_weekly_tracking_summary) started at #{Time.now}====="
+
+        args.with_defaults(:test => false)
+        if (args[:test] || Rails.env.production?)
+            Organization.is_active.each do |org|
+                org.users.not_disabled.each do |usr|
+                    UserMailer.weekly_tracking_summary(usr).deliver_later
+                    sleep(0.5)
+                end
+            end
+
+            puts "\n\n=====Task (email_weekly_tracking_summary) ended at #{Time.now}====="
+        else
+            puts "\n\n=====Task (email_weekly_tracking_summary) ended without running at #{Time.now}====="
         end
     end
 

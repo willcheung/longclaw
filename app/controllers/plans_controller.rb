@@ -11,7 +11,7 @@ class PlansController < ApplicationController
     #current_user.upgrade(:Plus)
 
     # TEST sending weekly email
-    UserMailer.weekly_tracking_summary(current_user).deliver_later
+    #UserMailer.weekly_tracking_summary(current_user).deliver_later
 
     if current_user.stripe_customer_id
       customer = Stripe::Customer.retrieve(current_user.stripe_customer_id, :expand => 'subscriptions')
