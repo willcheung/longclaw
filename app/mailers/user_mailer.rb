@@ -13,7 +13,7 @@ class UserMailer < ApplicationMailer
 
      # last 60 days of emails sent + their history and emails opened + their history
     sql_where = "tracking_requests.tracking_id in (
-                   select tracking_id from tracking_requests where user_id='#{user.id}' and sent_at > NOW() - interval '60' day
+                   select tracking_id from tracking_requests where user_id='#{user.id}' and sent_at > NOW() - interval '7' day
                     UNION
                    select e.tracking_id from tracking_events e join tracking_requests r on e.tracking_id=r.tracking_id where date > NOW() - interval '7' day and r.user_id='#{user.id}')"
 
@@ -25,7 +25,6 @@ class UserMailer < ApplicationMailer
 
     @trackings = TrackingRequest.includes(:tracking_events)
                      .where(sql_where)
-                     .page(1)
                      .order('tracking_events.date DESC NULLS LAST').order('sent_at DESC');
 
     @unopened = TrackingRequest.find_by_sql("SELECT user_id,subject,sent_at,recipients, email_id, count(e.id) as cnt 
