@@ -130,8 +130,10 @@ namespace :scheduler do
         if (args[:test] || Rails.env.production?)
             Organization.is_active.each do |org|
                 org.users.not_disabled.each do |usr|
-                    UserMailer.weekly_tracking_summary(usr).deliver_later
-                    sleep(0.5)
+                    if usr.email_weekly_tracking
+                        UserMailer.weekly_tracking_summary(usr).deliver_later
+                        sleep(0.5)
+                    end
                 end
             end
 

@@ -2,43 +2,46 @@
 #
 # Table name: users
 #
-#  id                     :uuid             not null, primary key
-#  first_name             :string           default(""), not null
-#  last_name              :string           default(""), not null
-#  email                  :string           default(""), not null
-#  encrypted_password     :string           default(""), not null
-#  image_url              :string
-#  reset_password_token   :string
-#  reset_password_sent_at :datetime
-#  remember_created_at    :datetime
-#  sign_in_count          :integer          default(0), not null
-#  current_sign_in_at     :datetime
-#  last_sign_in_at        :datetime
-#  current_sign_in_ip     :inet
-#  last_sign_in_ip        :inet
-#  oauth_provider         :string
-#  oauth_provider_uid     :string
-#  oauth_access_token     :string
-#  oauth_refresh_token    :string
-#  oauth_expires_at       :datetime
-#  organization_id        :uuid
-#  department             :string
-#  is_disabled            :boolean          default(FALSE), not null
-#  created_at             :datetime
-#  updated_at             :datetime
-#  invitation_created_at  :datetime
-#  invited_by_id          :uuid
-#  onboarding_step        :integer
-#  cluster_create_date    :datetime
-#  cluster_update_date    :datetime
-#  title                  :string
-#  time_zone              :string           default("UTC")
-#  mark_private           :boolean          default(FALSE), not null
-#  role                   :string
-#  refresh_inbox          :boolean          default(TRUE), not null
-#  encrypted_password_iv  :string
-#  billing_email          :string
-#  stripe_customer_id     :string
+#  id                        :uuid             not null, primary key
+#  first_name                :string           default(""), not null
+#  last_name                 :string           default(""), not null
+#  email                     :string           default(""), not null
+#  encrypted_password        :string           default(""), not null
+#  image_url                 :string
+#  reset_password_token      :string
+#  reset_password_sent_at    :datetime
+#  remember_created_at       :datetime
+#  sign_in_count             :integer          default(0), not null
+#  current_sign_in_at        :datetime
+#  last_sign_in_at           :datetime
+#  current_sign_in_ip        :inet
+#  last_sign_in_ip           :inet
+#  oauth_provider            :string
+#  oauth_provider_uid        :string
+#  oauth_access_token        :string
+#  oauth_refresh_token       :string
+#  oauth_expires_at          :datetime
+#  organization_id           :uuid
+#  department                :string
+#  is_disabled               :boolean          default(FALSE), not null
+#  created_at                :datetime
+#  updated_at                :datetime
+#  invitation_created_at     :datetime
+#  invited_by_id             :uuid
+#  onboarding_step           :integer
+#  cluster_create_date       :datetime
+#  cluster_update_date       :datetime
+#  title                     :string
+#  time_zone                 :string           default("UTC")
+#  mark_private              :boolean          default(FALSE), not null
+#  role                      :string
+#  refresh_inbox             :boolean          default(TRUE), not null
+#  encrypted_password_iv     :string
+#  billing_email             :string
+#  stripe_customer_id        :string
+#  email_weekly_tracking     :boolean          default(TRUE)
+#  email_onboarding_campaign :boolean          default(TRUE)
+#  email_new_features        :boolean          default(TRUE)
 #
 # Indexes
 #
