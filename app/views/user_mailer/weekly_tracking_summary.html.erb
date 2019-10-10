@@ -1,20 +1,58 @@
 <!-- Header -->
-<table class="row" border="0" cellspacing="0" cellpadding="0" style="margin:0;padding:0;border:0;text-align:left;border-collapse:collapse;border-spacing:0">
+<table class="row" border="0" cellspacing="0" cellpadding="0" style="background:#ffffff;margin:0;padding:0;border:0;text-align:left;border-collapse:collapse;border-spacing:0">
   <tr>
-  <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;padding:0;border-spacing:0;color:#000000;width:49%;vertical-align:middle"><hr style="margin:0;padding:0;border:none;border-bottom:3px solid #e5e5e5"></td>
+  <td style="background:#ffffff;text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;padding:0;border-spacing:0;color:#000000;width:49%;vertical-align:middle"><hr style="margin:0;padding:0;border:none;border-bottom:3px solid #e5e5e5"></td>
     <th class="center" style="width:2%;padding:0 10px;white-space:nowrap;vertical-align:middle">
       <center>
-        <h1 style="font-size:32px;font-weight:200;color:#222222;line-height:normal;text-align:center;margin:0 auto">
+        <h1 style="background-color:#ffffff;font-size:32px;font-weight:200;color:#222222;line-height:normal;text-align:center;margin:0 auto">
           Weekly Summary<br>
           <span style="font-weight:normal;font-size:16px;font-weight:200;color:#222222;"><%= 1.week.ago.strftime('%A, %B %d') + ' - ' + Time.current.yesterday.strftime('%A, %B %d') %></span>
         </h1>
       <center>
     </th>
-    <td style="text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;padding:0;border-spacing:0;color:#000000;width:49%;vertical-align:middle"><hr style="margin:0;padding:0;border:none;border-bottom:3px solid #e5e5e5"></td>
+    <td style="background:#ffffff;text-align:left;font-size:15px;line-height:19px;border-collapse:collapse;padding:0;border-spacing:0;color:#000000;width:49%;vertical-align:middle"><hr style="margin:0;padding:0;border:none;border-bottom:3px solid #e5e5e5"></td>
   </tr>
 </table>
 <div style="width:100%;padding-bottom:20px"></div>
 
+
+<!-- bar graph -->
+
+<!-- Title -->
+<table class="row" style="padding:0;margin:0;width:100%;border-collapse:collapse;">
+  <tbody style="width:100%;display:table;margin-top:2em">
+    <tr>
+      <td style="word-break:break-word;border-collapse:collapse;padding:0;vertical-align:top;text-align:left;border-bottom:1px solid #ccc;color:#333;font-family:Helvetica,Arial,sans-serif;font-weight:200;line-height:19px;margin:0;font-size:14px">
+        <h3 style="color:#333;font-family:Helvetica,Arial,sans-serif;font-weight:200;text-align:left;line-height:1.3;margin:0;padding:0;font-size:28px">Emails sent by domain</h3>
+      </td>
+      <td style="word-break:break-word;border-collapse:collapse;padding:0;vertical-align:top;text-align:left;border-bottom:1px solid #ccc;width:0;color:#333;font-family:Helvetica,Arial,sans-serif;font-weight:200;line-height:19px;margin:0;font-size:14px"></td>
+    </tr>
+  </tbody>
+</table>
+
+<% if @sorted_email_domain_counts.empty? %>
+  <span style="margin:1em 0em;font-size:15px;font-weight:bold;color:#A1C436">You didn't send any tracked emails last week.</span>
+<% else %>
+
+  <table style="border-spacing:0;border-collapse:collapse;padding:0;width:100%;table-layout:fixed">
+   <tbody>
+      <tr style="padding:0">
+        <% @sorted_email_domain_counts.each_with_index do |(domain,value),index| %>
+          <td width="<%= value %>%" style="width:<%= value %>%!important;word-break:break-word;border-collapse:collapse;padding:0;vertical-align:middle;text-align:left;color:#fff;font-weight:200;line-height:30px;margin:0;font-size:12px;background-color:<%= User::PROFILE_COLOR[index%9] %>;height:30px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">&nbsp;&nbsp;<%= (value.to_i) >= 18 ? truncate(domain, length: (value.to_i)) : "" %></td>
+        <% end %>
+      </tr>
+   </tbody>
+  </table>
+  <!-- Legend -->
+  <div style="width:100%;text-align:right;font-size:12px;line-height:25px;color:#888;margin-bottom:30px;">
+    <% @sorted_email_domain_counts.each_with_index do |(domain,value),index| %>
+      <span style="white-space:nowrap"><% if index != 0 %>&nbsp;&nbsp;&nbsp;<% end %>
+        <span style="background-color:<%= User::PROFILE_COLOR[index%9] %>;color:#ffffff;display:inline-block;font-size:13px;font-weight:bold;line-height:15px;text-align:center;text-decoration:none;width:15px">&nbsp;</span>&nbsp;<%= domain %>
+      </span>
+    <% end %>
+  </div>
+
+<% end %>
 
 <!-- Title -->
 <table class="row" style="padding:0;margin:0;width:100%;border-collapse:collapse;">
@@ -118,7 +156,7 @@
 
 
 <% if @unopened.empty? %>
-  <span style="margin:1em 0em;font-size:15px;font-weight:bold;color:#A1C436">No tracked emails sent last week.</span>
+  <span style="margin:1em 0em;font-size:15px;font-weight:bold;color:#A1C436">You didn't send any tracked emails last week.</span>
 <% else %>
   <!-- Unopened Emails -->
   <% @unopened.each do |t| %>

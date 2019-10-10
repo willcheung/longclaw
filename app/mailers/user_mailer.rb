@@ -10,6 +10,7 @@ class UserMailer < ApplicationMailer
 
   def weekly_tracking_summary(user)
     @user = user
+    email_recipients_domain = []
 
      # last 60 days of emails sent + their history and emails opened + their history
     sql_where = "tracking_requests.tracking_id in (
@@ -31,6 +32,10 @@ class UserMailer < ApplicationMailer
                   FROM tracking_requests r left outer join tracking_events e on e.tracking_id = r.tracking_id 
                   WHERE r.user_id='#{user.id}' AND r.sent_at > NOW() - interval '7' day group by 1,2,3,4,5 having count(e.id) = 0;")
 
+    tracking_recipients = TrackingRequest.select("recipients").where("sent_at > NOW() - interval '7' day and user_id='#{user.id}'")
+    tracking_recipients.each {|e| email_recipients_domain << e.recipients.flatten.to_s.tr('[]"', '').split("@").last}
+    email_domain_counts = email_recipients_domain.group_by{|e| e}.map{|k, v| [k, v.length]}.to_h
+    @sorted_email_domain_counts = email_domain_counts.sort_by {|_key, value| -value} #sort by reverse (therefore negative "value")
 
     puts "Emailing weekly tracking summary to #{user.email}"
     mail(to: user.email, subject: "Weekly email tracking summary: #{1.week.ago.strftime('%b %d')} - #{Time.current.yesterday.strftime('%b %d')}")
