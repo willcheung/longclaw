@@ -89,8 +89,8 @@ class User < ActiveRecord::Base
   devise :database_authenticatable, :registerable, :oathkeeper_authenticatable,
          :rememberable, :trackable, :omniauthable, :omniauth_providers => [:google_oauth2, :google_oauth2_basic, :microsoft_v2_auth, :salesforce, :salesforce_sandbox]
 
-  # TODO: Add e-mail pattern validation
   validates :email, uniqueness: true
+  validates :email, format: { with: URI::MailTo::EMAIL_REGEXP } 
 
   # attr_encrypted :oauth_access_token
   attr_encrypted :password, key: ENV['encryption_key'], if: proc { |user| user.oauth_provider == User::AUTH_TYPE[:Exchange] }
