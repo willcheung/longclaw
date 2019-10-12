@@ -40,6 +40,7 @@ Longclaw::Application.routes.draw do
 
     resources :project_members
     resources :users
+    post 'user/create' => 'users#create'
     get 'user/me' => 'users#me'
     get 'plans/upgrade' => 'plans#upgrade'
     #resources :plans

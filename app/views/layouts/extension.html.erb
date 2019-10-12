@@ -99,12 +99,18 @@
                 <li class="dropdown pull-right" style="margin-left:-30px">
                   <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><i style="font-size: 15px; color: #777;" class="fa fa-ellipsis-v"></i></a>
                   <ul class="dropdown-menu">
+                    <li><%= link_to  '/settings', target: "_blank" do %>
+                        <i class="fa fa-cog"></i> &nbsp; Settings
+                      <% end %></li>
+                    <li><%= link_to  '/settings/users', target: "_blank" do %>
+                        <i class="fa fa-users"></i> &nbsp; Invite teammate
+                      <% end %></li>
                     <li><%= link_to  '/plans/new', target: "_blank" do %>
-                        <i class="fa fa-star"></i> Upgrade
+                        <i class="fa fa-star"></i> &nbsp; Upgrade
                       <% end %></li>
                     <li role="separator" class="divider"></li>
-                    <li><a href="#" class="share-action"><i class="fa fa-heart-o"></i> Refer a friend</a></li>
-                    <li><a href="mailto:support@contextsmith.com" target="_blank" class="">Email Support</a></li>
+                    <li><a href="#" class="share-action"><i class="fa fa-heart-o"></i> &nbsp; Refer a friend</a></li>
+                    <li><a href="mailto:support@contextsmith.com" target="_blank" class=""> <i class="fa fa-envelope-o"></i> &nbsp; Email Support</a></li>
                   </ul>
                 </li>
               </ul></div>

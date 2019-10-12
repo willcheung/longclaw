@@ -89,7 +89,7 @@ class ApplicationController < ActionController::Base
   def restrict_access
     # whitelist for basic users: extension pages, extension tutorial, extension/tracking related stuff, salesforce login, everything else redirects to access_denied page
     redirect_to home_access_denied_path unless
-        %w[extension tracking sessions salesforce omniauth_callbacks plans accounts contacts search settings users].include?(params[:controller]) ||
+        %w[extension tracking sessions salesforce omniauth_callbacks plans accounts contacts search settings users organizations].include?(params[:controller]) ||
         %w[me access_denied extension_tutorial landing privacy terms].include?(params[:action]) ||
         current_user.pro?
   end

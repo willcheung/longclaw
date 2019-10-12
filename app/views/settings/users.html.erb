@@ -1,3 +1,67 @@
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.css"/>
+<link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials-theme-minima.css"/>
+
+<style type="text/css">
+    .bs-wizard {margin: 30px 0;}
+
+    /*Form Wizard*/
+    .bs-wizard > .bs-wizard-step {padding: 0; position: relative;}
+    .bs-wizard > .bs-wizard-step + .bs-wizard-step {}
+    .bs-wizard > .bs-wizard-step .bs-wizard-stepnum {color: #595959; font-size: 13px; margin-bottom: 5px;}
+    .bs-wizard > .bs-wizard-step .bs-wizard-info {color: #999; font-size: 12px;}
+    .bs-wizard > .bs-wizard-step > .bs-wizard-dot {position: absolute; width: 30px; height: 30px; display: block; background: #77afd7; top: 45px; left: 50%; margin-top: -15px; margin-left: -15px; border-radius: 50%;} 
+    .bs-wizard > .bs-wizard-step > .bs-wizard-dot:after {content: ' '; width: 14px; height: 14px; background: #3c6bc5; border-radius: 50px; position: absolute; top: 8px; left: 8px; } 
+    .bs-wizard > .bs-wizard-step > .progress {position: relative; border-radius: 0px; height: 8px; box-shadow: none; margin: 20px 0;}
+    .bs-wizard > .bs-wizard-step > .progress > .progress-bar {width:0px; box-shadow: none; background: #77afd7;}
+    .bs-wizard > .bs-wizard-step.complete > .progress > .progress-bar {width:100%;}
+    .bs-wizard > .bs-wizard-step.active > .progress > .progress-bar {width:50%;}
+    .bs-wizard > .bs-wizard-step:first-child.active > .progress > .progress-bar {width:0%;}
+    .bs-wizard > .bs-wizard-step:last-child.active > .progress > .progress-bar {width: 100%;}
+    .bs-wizard > .bs-wizard-step.disabled > .bs-wizard-dot {background-color: #f5f5f5;}
+    .bs-wizard > .bs-wizard-step.disabled > .bs-wizard-dot:after {opacity: 0;}
+    .bs-wizard > .bs-wizard-step:first-child  > .progress {left: 50%; width: 50%;}
+    .bs-wizard > .bs-wizard-step:last-child  > .progress {width: 50%;}
+    .bs-wizard > .bs-wizard-step.disabled a.bs-wizard-dot{ pointer-events: none; }
+    /*END Form Wizard*/
+
+    .referralUrl-box {
+        width: 100%;
+        margin: 30px auto;
+    }
+
+    .referralUrl-box > div {
+        height: 2em; 
+    }
+
+    .icon {
+        width: 16px;
+        height: 16px;
+        padding: 0;
+        margin: 0;
+        vertical-align: middle;
+    }
+    .btn-group {
+        color: black;
+        background-color: white;
+        border: 1px solid black;
+        border-radius: 5px;
+        margin: 0;
+        top: 30%;
+        left: 50%;
+        margin-right: -50%;
+        transform: translate(-50%, -50%);
+    }
+    .btn-group > span {
+        font-size: 11pt;
+        margin: 0.7em 10px;
+        float: left;
+    }
+    .btn-default {
+        height: 3em;
+    }
+</style>
+
+
 <div class="row wrapper border-bottom white-bg page-heading">
     <div class="col-lg-10">
         <h2>Users Settings</h2>
@@ -18,7 +82,9 @@
 <div class="wrapper wrapper-content animated fadeInRight">
     <div class="ibox float-e-margins">
         <div class="ibox-content">
-            <h1> Users </h1>
+            <h1> Invite teammates &nbsp; <%= link_to '+ Add a teammate', '#new_user_modal', 'data-toggle' => 'modal', 'class' => 'btn btn-primary m-t-lg', 'style' => 'vertical-align: bottom' %></h1>
+            <p>Every user in this team can share contacts, notes, and CRM data. Everyone will be on the same plan and paid subscription.
+            <br>(You're free to add or remove teammates anytime.)</p>
             <table class="table table-striped table-bordered table-hover responsive no-wrap" id="users-table" cellspacing="0" width="100%">
                 <thead>
                     <tr>
@@ -53,6 +119,151 @@
         </div>
     </div>
 </div>
+
+<div class="gray-bg jumbotron center-block">
+  <div class="container">
+    
+    <h2 class="text-center m-b-xl">Just want to refer your friends? <br>Get a <u style="white-space:nowrap">free month</u> of <a href="https://app.contextsmith.com/plans/new" target="_blank">Plus Plan</a> for each referral who signs up.</h2>
+
+    <div class="row bs-wizard">
+      <div class="col-xs-4 bs-wizard-step complete">
+        <div class="text-center bs-wizard-stepnum">1. Invite your friends</div>
+        <div class="progress"><div class="progress-bar"></div></div>
+        <span class="bs-wizard-dot"></span>
+        <div class="bs-wizard-info text-center"></div>
+      </div>
+
+      <div class="col-xs-4 bs-wizard-step complete">
+        <div class="text-center bs-wizard-stepnum">2. They sign up a free trial</div>
+        <div class="progress"><div class="progress-bar"></div></div>
+        <span class="bs-wizard-dot"></span>
+        <div class="bs-wizard-info text-center"></div>
+      </div>
+            
+      <div class="col-xs-4 bs-wizard-step active">
+        <div class="text-center bs-wizard-stepnum">3. Enjoy free upgrade!</div>
+        <div class="progress"><div class="progress-bar"></div></div>
+        <span class="bs-wizard-dot"></span>
+        <div class="bs-wizard-info text-center"></div>
+      </div>
+    </div>     
+    <div class="text-center m-t-xl m-b-xl" id="share"></div>
+    <div class="referralUrl-box">
+      <h2 class="text-center" style="padding-bottom: 0.5em;">Or just copy and share this link</h2>
+      <div style="position: relative">
+        <div class="btn-group">
+          <span style="display: inline-block;"><%= @referral_url %></span>
+          <button class="btn btn-default" title="Copy to clipboard">Copy link</i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="text-center"><p style="font-size:14px">Your friends will not be part of this team. Please click "+ Invite teammate" button to share and collaborate with your team.</p></div>
+</div>
+
+<div class="modal inmodal fade" id="new_user_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title">New Teammate</h4>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <%= simple_form_for User.new, html: {role: :form, 'data-model' => 'user'}, url: user_create_path do |f| %>
+
+          <span class="help-block" style="color:red"></span>      
+          <%# Added Bootstrap classes, and help-block container for error messages %> 
+          <%= f.input :first_name, wrapper_html: { class: 'col-md-6'} %>
+          <%= f.input :last_name, wrapper_html: { class: 'col-md-6'} %>
+
+          <%= f.input :email, wrapper_html: { class: 'col-md-8'} %>
+
+          <%= f.input :organization_id, as: :hidden, input_html: { value: current_user.organization_id } %>
+          
+          <%= f.button :submit, value: 'Send invitation', class: 'btn-primary pull-right form-group', style: 'width: 100%' %>
+
+        <% end %>
+          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.jssocials/1.4.0/jssocials.min.js"></script>
+<script>
+    var copyToClipboard = (function () {
+        var _dataString = null;
+        document.addEventListener("copy", function (e) {
+            if (_dataString !== null) {
+                try {
+                    e.clipboardData.setData("text/plain", _dataString);
+                    e.preventDefault();
+                } finally {
+                    _dataString = null;
+                }
+            }
+        });
+        return function (data) {
+            _dataString = data;
+            document.execCommand("copy");
+            $('.btn-group').attr("style", "background-color: #AFA;");
+            $('.btn-group > button').attr("style", "background-color: green;");
+            $('.btn-group > button').html("Copied!");
+        };
+    })();
+
+    var popupWindowRef = null;
+    var prevPopup = null;
+
+    var openGmailComposePopupWithReferralURL = function (referral_url, strTarget) {
+        var emailSubject = "Join me?";
+        var emailBody = "I've been using ContextSmith's email tracker to see when my emails are being opened. I love it because I can see if my recipients read my emails and get a detailed profile about them (picture, job title, social media links). %0A%0ABest of all, it's free. %0A%0AI thought you might enjoy it: " + referral_url + " %0A";
+        var strUrl = "https://mail.google.com/mail/?view=cm&authuser=<%= current_user.email %>&su=" + emailSubject + "&body=" + emailBody;
+        var strOptions = "width=700,height=500";
+        if (popupWindowRef == null || popupWindowRef.closed) {
+          popupWindowRef = window.open(strUrl, strTarget, strOptions);
+    }
+    else if (prevPopup != strUrl) {   
+        popupWindowRef = window.open(strUrl, strTarget, strOptions);
+        popupWindowRef.focus();
+    }
+    else {
+        popupWindowRef.focus();
+    }
+        prevPopup = strUrl;
+    };
+
+    jsSocials.shares.email = {
+        label: 'Email',
+        logo: 'fa fa-envelope',
+        shareUrl: "javascript:(function() { openGmailComposePopupWithReferralURL(\'{url}\', 'GmailCompose'); return false; })()",
+        countUrl: ''
+    };
+
+    $('#share').jsSocials({
+        url: '<%= @referral_url %>',
+        text: "I\'m using ContextSmith's free Email Tracking and Profiling #EmailTracking ",
+        showCount: true,
+        showLabel: true,
+        shareIn: 'self',
+        shares: ['twitter', 'facebook', 'linkedin', 'email']
+    });
+    $('.jssocials-shares').css({'font-size': '12pt'});
+    $('.jssocials-share.jssocials-share-facebook > a > span').text("Share");
+
+    $(".btn-group > button").click(function(){
+        (function() {
+            copyToClipboard('<%= @referral_url %>');
+            return false; 
+        })();
+    });
+</script>
 
 <script>
 $(document).ready(function() {

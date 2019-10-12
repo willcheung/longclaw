@@ -31,8 +31,6 @@ class Organization < ActiveRecord::Base
 
   scope :is_active, -> { where is_active: true }
 
-  validates :domain, uniqueness: true
-
   # Returns a new Organization if there's no existing one.  If there is, return the existing one.
   def self.create_or_update_user_organization(domain, user)
     existing_org = Organization.find_by_domain(domain)

@@ -22,6 +22,23 @@ class UsersController < ApplicationController
     end
   end
 
+  # Only used by settings#users for inviting users
+  def create
+    @user = User.new(user_params.merge(invited_by_id: current_user.id, role: current_user.role))
+    respond_to do |format|
+      if @user.save
+        UserMailer.user_invitation_email(@user, get_full_name(current_user), new_user_registration_url(invited_by: current_user.first_name)).deliver_later
+
+        format.html { redirect_to settings_users_path, notice: 'User was successfully invited.' }
+        format.js  {render json: @user}
+      else
+        format.html { redirect_to settings_users_path, notice: @user.errors.full_messages.first }
+        #format.json { render json: @account.errors, status: :unprocessable_entity }
+        format.js { render json: @user.errors, status: :unprocessable_entity }
+      end
+    end
+  end
+
   def update
     respond_to do |format|
       if @user.update(user_params)
@@ -63,7 +80,7 @@ class UsersController < ApplicationController
 
   # Never trust parameters from the scary internet, only allow the white list through.
   def user_params
-    params.require(:user).permit(:title, :department, :mark_private, :role, :refresh_inbox, :is_disabled, :email_weekly_tracking, :email_onboarding_campaign, :email_new_features)
+    params.require(:user).permit(:title, :first_name, :last_name, :organization_id, :email, :department, :mark_private, :role, :refresh_inbox, :is_disabled, :email_weekly_tracking, :email_onboarding_campaign, :email_new_features)
   end
 
 end

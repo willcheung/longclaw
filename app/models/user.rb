@@ -241,7 +241,7 @@ class User < ActiveRecord::Base
       UserMailer.welcome_email(user).deliver_later
     end
 
-    user.maybe_upgrade # do we have to upgrade the user as the organization plan is available
+    #user.maybe_upgrade # do we have to upgrade the user as the organization plan is available
     user.save!
     user
   end

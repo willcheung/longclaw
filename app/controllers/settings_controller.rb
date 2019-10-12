@@ -4,6 +4,7 @@ class SettingsController < ApplicationController
 
 	def index
 		@user_count = current_user.organization.users.count
+		@organization = current_user.organization
 
 		# if (@salesforce_user.nil? && # could not connect via organization/admin login
 		# 		current_user.power_or_trial_only?)  # AND is an individual (power user or trial/Chrome user)
@@ -16,6 +17,9 @@ class SettingsController < ApplicationController
 
 	def users
 		@users = current_user.organization.users
+
+		referral_code = PlansService.referral_code(current_user)
+    @referral_url = url_for(controller: 'extension', action: 'refer') + "?ref=#{referral_code}"
 	end
 
 	def alerts

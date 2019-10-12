@@ -1,5 +1,4 @@
 class OrganizationsController < ApplicationController
-  before_action :check_if_super_admin
   before_action :set_organization, only: [:show, :edit, :update, :destroy]
 
   layout 'empty', only: 'new'
@@ -70,9 +69,6 @@ class OrganizationsController < ApplicationController
   end
 
   private
-    def check_if_super_admin
-      redirect_to authenticated_root_path and return unless current_user.superadmin?
-    end
 
     # Use callbacks to share common setup or constraints between actions.
     def set_organization
