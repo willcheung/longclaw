@@ -23,8 +23,7 @@
 
 /* Ahoy analytics */
 // 8/9/19 temporarily disabling ahoy since we're not using it and might cause db bottleneck
-// 9/30/19 re-enabled, after implementing redis caching on 8/20
-ahoy.trackAll();
+// ahoy.trackAll();
 
 /* Timezone */
 jQuery(function() {
