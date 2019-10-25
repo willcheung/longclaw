@@ -11,31 +11,58 @@ class UserMailer < ApplicationMailer
   def weekly_tracking_summary(user)
     @user = user
     email_recipients_domain = []
+    email_recipients = []
+    email_recipients_last_week = []
 
-     # last 60 days of emails sent + their history and emails opened + their history
-    sql_where = "tracking_requests.tracking_id in (
-                   select tracking_id from tracking_requests where user_id='#{user.id}' and sent_at > NOW() - interval '7' day
-                    UNION
-                   select e.tracking_id from tracking_events e join tracking_requests r on e.tracking_id=r.tracking_id where date > NOW() - interval '7' day and r.user_id='#{user.id}')"
-
+    # last 60 days of emails sent + their history and emails opened + their history
     # sql_where = "tracking_requests.tracking_id in (
-    #                select tracking_id from tracking_requests where user_id='06c1f3f8-723d-4e2d-aaa3-f955e44d7072' and sent_at > NOW() - interval '760' day
+    #                select tracking_id from tracking_requests where user_id='#{user.id}' and sent_at > NOW() - interval '7' day
     #                 UNION
-    #                select e.tracking_id from tracking_events e join tracking_requests r on e.tracking_id=r.tracking_id where date > NOW() - interval '760' day and r.user_id='06c1f3f8-723d-4e2d-aaa3-f955e44d7072')
-    #              AND tracking_events.date > NOW() - interval '760' day"
+    #                select e.tracking_id from tracking_events e join tracking_requests r on e.tracking_id=r.tracking_id where date > NOW() - interval '7' day and r.user_id='#{user.id}')"
 
-    @trackings = TrackingRequest.includes(:tracking_events)
-                     .where(sql_where)
-                     .order('tracking_events.date DESC NULLS LAST').order('sent_at DESC');
+    # @trackings = TrackingRequest.includes(:tracking_events)
+    #                  .where(sql_where)
+    #                  .order('tracking_events.date DESC NULLS LAST').order('sent_at DESC');
 
     @unopened = TrackingRequest.find_by_sql("SELECT user_id,subject,sent_at,recipients, email_id, count(e.id) as cnt 
                   FROM tracking_requests r left outer join tracking_events e on e.tracking_id = r.tracking_id 
                   WHERE r.user_id='#{user.id}' AND r.sent_at > NOW() - interval '7' day group by 1,2,3,4,5 having count(e.id) = 0;")
 
     tracking_recipients = TrackingRequest.select("recipients").where("sent_at > NOW() - interval '7' day and user_id='#{user.id}'")
+    tracking_recipients_last_week = TrackingRequest.select("recipients").where("sent_at >= NOW() - interval '14' day and sent_at < NOW() - interval '7' day and user_id='#{user.id}'")
+    
+    # Sorted email domain count - for bar chart
     tracking_recipients.each {|e| email_recipients_domain << e.recipients.flatten.to_s.tr('[]"', '').split("@").last}
     email_domain_counts = email_recipients_domain.group_by{|e| e}.map{|k, v| [k, v.length]}.to_h
     @sorted_email_domain_counts = email_domain_counts.sort_by {|_key, value| -value} #sort by reverse (therefore negative "value")
+
+    # Unique recipient count - for summary
+    tracking_recipients.each {|e| email_recipients << e.recipients.flatten.to_s.tr('[]"', '')}
+    tracking_recipients_last_week.each {|e| email_recipients_last_week << e.recipients.flatten.to_s.tr('[]"', '')}
+    @email_recipients_count = email_recipients.uniq.count
+    puts "Email recipients count: " + @email_recipients_count.to_s
+    email_recipients_count_last_week = email_recipients_last_week.uniq.count
+    puts "Email recipients count last week: " + email_recipients_count_last_week.to_s
+    @email_recipients_change = get_percent_change(email_recipients_count_last_week, @email_recipients_count)
+    puts "Email recipients change: " + @email_recipients_change.to_s + "%"
+
+    @emails_sent = TrackingRequest.where("sent_at > NOW() - interval '7' day and user_id='#{user.id}'").count
+    puts "Emails sent: " + @emails_sent.to_s
+    emails_sent_last_week = TrackingRequest.where("sent_at >= NOW() - interval '14' day and sent_at < NOW() - interval '7' day and user_id='#{user.id}'").count
+    puts "Emails sent last week: " + emails_sent_last_week.to_s
+    @emails_sent_change = get_percent_change(emails_sent_last_week, @emails_sent)
+    puts "Emails sent change: " + @emails_sent_change.to_s + "%"
+
+    emails_opened = TrackingEvent.select("distinct tracking_id").where("tracking_id in (select tracking_id from tracking_requests where user_id='#{user.id}' AND sent_at > NOW() - interval '7' day)").count
+    puts "Emails opened: " + emails_opened.to_s
+    emails_opened_last_week = TrackingEvent.select("distinct tracking_id").where("tracking_id in (select tracking_id from tracking_requests where user_id='#{user.id}' AND sent_at >= NOW() - interval '14' day and sent_at < NOW() - interval '7' day)").count
+    puts "Emails opened last week: " + emails_opened_last_week.to_s
+    @emails_open_percent = get_percent(emails_opened, @emails_sent)
+    puts "Emails open percent: " + @emails_open_percent.to_s + "%"
+    emails_open_percent_last_week = get_percent(emails_opened_last_week, emails_sent_last_week)
+    puts "Emails open percent last week: " + emails_open_percent_last_week.to_s + "%"
+    @emails_open_percent_change = get_percent_change(emails_open_percent_last_week, @emails_open_percent)
+    puts "Emails open percent change: " + @emails_open_percent_change.to_s + "%"
 
     puts "Emailing weekly tracking summary to #{user.email}"
     mail(to: user.email, subject: "Weekly email tracking summary: #{1.week.ago.strftime('%b %d')} - #{Time.current.yesterday.strftime('%b %d')}")
@@ -142,5 +169,28 @@ class UserMailer < ApplicationMailer
 
     track user: @user # ahoy_email tracker
     mail(to: @user.email, subject: "#{@user.first_name}, your ContextSmith subscription has expired!")
+  end
+
+  private
+
+  def get_percent(numerator, denominator)
+    if denominator == 0 and numerator > 0
+      return 100
+    elsif denominator == 0 and numerator == 0
+      return 0
+    else
+      ((numerator.to_f / denominator.to_f) * 100.0).round(0)
+    end
+  end
+
+  def get_percent_change(v1, v2)
+    #((v2 - v1) / v1)*100 = your percent change
+    if v1 == 0 and v2 > 0
+      return 100
+    elsif v2 == 0 and v1 == 0
+      return 0
+    else
+      return (((v2 - v1).to_f / v1.to_f) * 100.0).round(0)
+    end
   end
 end

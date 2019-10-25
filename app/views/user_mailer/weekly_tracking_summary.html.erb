@@ -59,81 +59,88 @@
   <tbody style="width:100%;display:table;margin-top:2em">
     <tr>
       <td style="word-break:break-word;border-collapse:collapse;padding:0;vertical-align:top;text-align:left;border-bottom:1px solid #ccc;color:#333;font-family:Helvetica,Arial,sans-serif;font-weight:200;line-height:19px;margin:0;font-size:14px">
-        <h3 style="color:#333;font-family:Helvetica,Arial,sans-serif;font-weight:200;text-align:left;line-height:1.3;margin:0;padding:0;font-size:28px">Opened emails</h3>
+        <h3 style="color:#333;font-family:Helvetica,Arial,sans-serif;font-weight:200;text-align:left;line-height:1.3;margin:0;padding:0;font-size:28px">You Email Activity Summary</h3>
       </td>
       <td style="word-break:break-word;border-collapse:collapse;padding:0;vertical-align:top;text-align:left;border-bottom:1px solid #ccc;width:0;color:#333;font-family:Helvetica,Arial,sans-serif;font-weight:200;line-height:19px;margin:0;font-size:14px"></td>
     </tr>
   </tbody>
 </table>
 
-<!-- Tracking -->
-<div style="margin:0;font-size:14px;">
-<% if @trackings.empty? %>
-  <span style="margin:1em 0em;font-size:15px;font-weight:bold;color:#A1C436">No one opened your emails last week.</span>
-<% else %>
-  <% @trackings.each do |t| %>
-    <!-- List title/header -->
-    <table class="row" style="font-size:14px;padding:0;margin:0;width:100%;border-collapse:collapse;">
-      <tbody style="width:100%;display:table;margin-top:2em">
-        <tr>
-          <td style="font-weight:normal;color:#555;vertical-align:middle">
-            <span>
-              <strong><%= t.recipients.join(',') %></strong> opened your email <strong><%= link_to t.subject, "https://mail.google.com/mail/u/0/#sent/#{t.email_id}", data: {skip_utm_params: true}, target: "_blank" %></strong> that you sent <strong><%= time_ago_in_words(t.sent_at) %> ago</strong><br/>
-            </span>
-            <span style="color:grey; margin-left:6px">  
-              Opened <%= pluralize(t.tracking_events.count, 'time') %>:<br/>
-            </span>
-          </td>
-          <td class="expander"></td>
-        </tr>
-      </tbody>
-    </table>
-    <!-- List alerts -->
-    <table border="0" cellspacing="0" cellpadding="0" style="padding:0;border:0;width:100%;border-spacing:0;border-collapse:collapse;text-align:left;margin:3px 4px!important">
-      <tbody>
-        <% t.tracking_events.first(6).each do |e| %>
-          <tr>
-            <td style="padding:0;">
-              <table>
-                <tr>
-                  <td style="text-align:left;font-size:15px;line-height:14px;border-collapse:collapse;border-spacing:0;vertical-align:top">
-                    <table border="0" cellpadding="0" cellspacing="0">
-                      <tbody style="color:#999;font-weight:normal;font-size:14px;line-height:15px;">
-                        <tr>
-                          <td> 
-                            &nbsp; <%= time_ago_in_words(e.date) %> ago &nbsp;
-                          </td>
-                          <td>
-                            <% if e.place_name == "Gmail" %>
-                              &nbsp;<img src="https://app.contextsmith.com/assets/fa-gmail.png" width="15" height="15" border="0"/>&nbsp;Gmail
-                            <% elsif !e.place_name.present? %>
-            
-                            <% else %>
-                              <%= (link_to ("&nbsp;<img src=\"https://app.contextsmith.com/assets/fa-map-marker.png\" width=\"15\" height=\"15\" border=\"0\"/>&nbsp;" + e.place_name.sub(", United States", "")).html_safe, "https://maps.google.com/?q=#{e.place_name}", data: {skip_utm_params: true}, target: "_blank") %>
-                            <% end %>
-                          </td>
-                          <td>
-                            &nbsp;<%= user_agent_helper(e.user_agent, e.domain) %>.
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-        <% end %> <!-- End: tracking_events -->
-          
-        <% if t.tracking_events.count > 6 %>
-          <tr><span style="color:grey;">And <%= t.tracking_events.count - 6 %> more...</span></tr>
-        <% end %>
 
-      </tbody>
-    </table>
-  <% end %>  <!-- End: @trackings  -->
-<% end %> <!-- End: if @trackings.empty? -->
-</div>
+<table border="0" width="100%" cellspacing="0" cellpadding="0" align="center" style="border-collapse:collapse">
+   <tbody>
+      <tr>
+         <td height="16" style="line-height:16px">&nbsp;</td>
+      </tr>
+      <tr>
+         <td>
+            <table border="0" width="100%" cellspacing="0" cellpadding="0" align="center" style="border-collapse:collapse">
+               <tbody>
+                  <tr>
+                     <td class="center" width="33%" align="center">
+                        <div style="font-size:32px"><%= @emails_sent %></div>
+                     </td>
+                     <td class="center" width="33%" align="center">
+                        <div style="font-size:32px"><%= @emails_open_percent %>%</div>
+                     </td>
+                     <td class="center" width="33%" align="center">
+                        <div style="font-size:32px"><%= @email_recipients_count %></div>
+                     </td>
+                  </tr>
+                  <tr>
+                     <td class="center" width="33%" align="center">
+                        <div style="font-size:12px;color:#606770;margin:4px auto">Emails Sent</div>
+                     </td>
+                     <td class="center" width="33%" align="center">
+                        <div style="font-size:12px;color:#606770;margin:4px auto">Emails Opened</div>
+                     </td>
+                     <td class="center" width="33%" align="center">
+                        <div style="font-size:12px;color:#606770;margin:4px auto">Unique Recipients</div>
+                     </td>
+                  </tr>
+                  <tr>
+                     <td class="center" width="33%" align="center">
+                        <% if @emails_sent_change >= 0 %>
+                          <div style="font-size:12px;color:#00a400">+<%= @emails_sent_change %>%</div>
+                        <% else %>
+                          <div style="font-size:12px;color:#fa383e"><%= @emails_sent_change %>%</div>
+                        <% end %>
+                     </td>
+                     <td class="center" width="33%" align="center">
+                        <% if @emails_open_percent_change >= 0 %>
+                          <div style="font-size:12px;color:#00a400">+<%= @emails_open_percent_change %>%</div>
+                        <% else %>
+                          <div style="font-size:12px;color:#fa383e"><%= @emails_open_percent_change %>%</div>
+                        <% end %>
+                     </td>
+                     <td class="center" width="33%" align="center">
+                        <% if @email_recipients_change >= 0 %>
+                          <div style="font-size:12px;color:#00a400">+<%= @email_recipients_change %>%</div>
+                        <% else %>
+                          <div style="font-size:12px;color:#fa383e"><%= @email_recipients_change %>%</div>
+                        <% end %>
+                     </td>
+                  </tr>
+               </tbody>
+            </table>
+         </td>
+      </tr>
+      <tr>
+         <td height="8" style="line-height:8px">&nbsp;</td>
+      </tr>
+      <tr>
+         <td>
+            <table border="0" width="100%" cellspacing="0" cellpadding="0" align="center" style="border-collapse:collapse">
+               <tbody>
+                  <tr>
+                     <td class="center" align="center" style="font-size:12px;color:#8d949e;padding-top:8px">Trends compared to last 7 days.</td>
+                  </tr>
+               </tbody>
+            </table>
+         </td>
+      </tr>
+   </tbody>
+</table>
 
 <div style="width:100%;padding-bottom:20px"></div>
 
