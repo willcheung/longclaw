@@ -267,9 +267,22 @@ class ExtensionController < ApplicationController
       tracking_requests_pastmo_h = current_user.tracking_requests.from_lastmonth.group_by{|tr| tr.sent_at.to_date}.map{|d,tr| [d, tr.length]}.to_h
       @emails_sent_lastmonth = (Date.today-1.month..Date.today).map{|d| [d, (tracking_requests_pastmo_h[d] ? tracking_requests_pastmo_h[d] : 0)]}
 
-      tracking_events_pastmo_h = current_user.tracking_requests.map do |tr|
-        tr.tracking_events.from_lastmonth.map{ |te| te.created_at.to_date }
-      end.flatten.group_by{|d| d}.map{|d,c| [d, c.length]}.to_h
+      sql_where = "tracking_requests.tracking_id in (
+                 select tracking_id from tracking_requests where user_id='#{current_user.id}' and sent_at > NOW() - interval '30' day
+                  UNION
+                 select e.tracking_id from tracking_events e join tracking_requests r on e.tracking_id=r.tracking_id where date > NOW() - interval '30' day and r.user_id='#{current_user.id}')"
+
+      tr = TrackingRequest.includes(:tracking_events)
+               .where(sql_where)
+               .pluck("tracking_events.created_at")
+      
+      tracking_events_pastmo_h = tr.map{ |d| d.to_date if !d.nil? }.flatten.group_by{|d| d}.map{|d,c| [d, c.length]}.to_h
+
+      # tracking_events_pastmo_h = Rails.cache.fetch("te_pastmo_h_#{current_user.id}", expires_in: 12.hours) do
+      #   tracking_events_pastmo_h = current_user.tracking_requests.map do |tr|
+      #     tr.tracking_events.from_lastmonth.map{ |te| te.created_at.to_date }
+      #   end.flatten.group_by{|d| d}.map{|d,c| [d, c.length]}.to_h
+      # end
       @emails_opened_lastmonth = (Date.today-1.month..Date.today).map{|d| [d, (tracking_events_pastmo_h[d] ? tracking_events_pastmo_h[d] : 0)]}
 
       @event_dates = (Date.today-1.month..Date.today).map{|d| d.strftime("%b %e")}
@@ -283,9 +296,14 @@ class ExtensionController < ApplicationController
         end
       end
 
-      tracking_events_daily_hourly_pastmo_h = current_user.tracking_requests.map do |tr|
-        tr.tracking_events.from_lastmonth.map{ |te| te.created_at.in_time_zone(current_user.time_zone) }
-      end.flatten.compact.group_by{|d| [d.strftime("%H").to_i, d.wday]}.map{|k,d| [k, d.length]}.to_h
+      tracking_events_daily_hourly_pastmo_h = tr.map{ |d| d.in_time_zone(current_user.time_zone) if !d.nil? }.flatten.compact.group_by{|d| [d.strftime("%H").to_i, d.wday]}.map{|k,d| [k, d.length]}.to_h
+
+      # tracking_events_daily_hourly_pastmo_h = Rails.cache.fetch("te_daily_hourly_pastmo_h_#{current_user.id}", expires_in: 12.hours) do
+      #   tracking_events_daily_hourly_pastmo_h = current_user.tracking_requests.map do |tr|
+      #     tr.tracking_events.from_lastmonth.map{ |te| te.created_at.in_time_zone(current_user.time_zone) }
+      #   end.flatten.compact.group_by{|d| [d.strftime("%H").to_i, d.wday]}.map{|k,d| [k, d.length]}.to_h
+      # end
+
       @emails_daily_hourly_opened_lastmonth = []
       (0..23).map do |h|
         (0..6).map do |d|
