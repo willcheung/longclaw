@@ -268,13 +268,15 @@ class ExtensionController < ApplicationController
       @emails_sent_lastmonth = (Date.today-1.month..Date.today).map{|d| [d, (tracking_requests_pastmo_h[d] ? tracking_requests_pastmo_h[d] : 0)]}
 
       sql_where = "tracking_requests.tracking_id in (
-                 select tracking_id from tracking_requests where user_id='#{current_user.id}' and sent_at > NOW() - interval '30' day
+                 select tracking_id from tracking_requests where user_id='#{current_user.id}' and sent_at BETWEEN NOW() - interval '30' day AND NOW()
                   UNION
-                 select e.tracking_id from tracking_events e join tracking_requests r on e.tracking_id=r.tracking_id where date > NOW() - interval '30' day and r.user_id='#{current_user.id}')"
+                 select e.tracking_id from tracking_events e join tracking_requests r on e.tracking_id=r.tracking_id where r.user_id='#{current_user.id}' and e.created_at BETWEEN NOW() - interval '30' day and NOW())"
 
-      tr = TrackingRequest.includes(:tracking_events)
-               .where(sql_where)
-               .pluck("tracking_events.created_at")
+      tr = Rails.cache.fetch("tr_te_dashboard_#{current_user.id}", expires_in: 12.hours) do
+        tr = TrackingRequest.includes(:tracking_events)
+                 .where(sql_where)
+                 .pluck("tracking_events.created_at")
+      end
       
       tracking_events_pastmo_h = tr.map{ |d| d.to_date if !d.nil? }.flatten.group_by{|d| d}.map{|d,c| [d, c.length]}.to_h
 
