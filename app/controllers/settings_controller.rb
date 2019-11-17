@@ -1,5 +1,5 @@
 class SettingsController < ApplicationController
-	before_filter :get_salesforce_admin_user, only: ['index', 'salesforce_accounts', 'salesforce_opportunities', 'salesforce_activities', 'salesforce_fields']
+	before_action :get_salesforce_admin_user, only: ['index', 'salesforce_accounts', 'salesforce_opportunities', 'salesforce_activities', 'salesforce_fields']
 	around_action :check_if_super_admin, only: ['super_user', 'user_analytics']
 
 	def index

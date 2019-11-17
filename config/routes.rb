@@ -195,5 +195,8 @@ Longclaw::Application.routes.draw do
     get 'twilio_sms'
   end
 
+  # twilio textwaittime
+  post 'users/create_via_twilio'
+
   get "track/:user_email/:tracking_id/:gif" => 'tracking#view'
 end

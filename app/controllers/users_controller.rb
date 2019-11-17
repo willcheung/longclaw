@@ -1,5 +1,5 @@
 class UsersController < ApplicationController
-  before_filter :authenticate_user!
+  before_action :authenticate_user!, except: [:create_via_twilio]
   before_action :set_user, only: [:show, :update, :destroy, :fill_in_info_update]
 
   def show
@@ -22,7 +22,8 @@ class UsersController < ApplicationController
     end
   end
 
-  # Only used by settings#users for inviting users
+  # Only used by modal user form in settings/users for inviting users
+  # user_parms --> "user"=>{"first_name"=>"a", "last_name"=>"b", "email"=>"a@b.com", "organization_id"=>"2205626a-d26e-4bfc-aadd-91111fe6b82c"}
   def create
     @user = User.new(user_params.merge(invited_by_id: current_user.id, role: current_user.role))
     respond_to do |format|
@@ -35,6 +36,18 @@ class UsersController < ApplicationController
         format.html { redirect_to settings_users_path, notice: @user.errors.full_messages.first }
         #format.json { render json: @account.errors, status: :unprocessable_entity }
         format.js { render json: @user.errors, status: :unprocessable_entity }
+      end
+    end
+  end
+
+  def create_via_twilio
+    @user = User.find_by_email("willycheung@gmail.com")
+
+    respond_to do |format|
+      if true
+        format.json { render json: @user, status: :created }
+      else
+        format.json { render json: @user.errors, status: :unprocessable_entity }
       end
     end
   end
@@ -80,7 +93,7 @@ class UsersController < ApplicationController
 
   # Never trust parameters from the scary internet, only allow the white list through.
   def user_params
-    params.require(:user).permit(:title, :first_name, :last_name, :organization_id, :email, :department, :mark_private, :role, :refresh_inbox, :is_disabled, :email_weekly_tracking, :email_onboarding_campaign, :email_new_features)
+    params.require(:user).permit(:title, :first_name, :last_name, :organization_id, :email, :phone, :department, :mark_private, :role, :refresh_inbox, :is_disabled, :email_weekly_tracking, :email_onboarding_campaign, :email_new_features)
   end
 
 end
