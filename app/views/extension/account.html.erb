@@ -347,7 +347,7 @@
                         </a>
                         <div class="container">
                             <div class="row m-t-xs m-b-sm">
-                            <% if current_user.plus? %>
+                            <% if true %>
                                 <% if contact.present? %>
                                     <div class="col-xs-6">
                                         <%= link_to "<button class=\"btn-outline btn-xs btn-block\"><i class=\"fa fa-pencil\"></i> Edit contact</button>".html_safe, '#extension_edit_contact_modal-'+contact.id, 'data-toggle' => 'modal', 'class' => 'edit-contact-link', 'sectionid' => "Profile-"+profile.id.to_s+"-"+n.to_s %>
@@ -365,7 +365,7 @@
                                 <% else %>
                                     <div class="col-xs-6">
                                         <% newcontact = Contact.new(last_name: last_name, first_name: first_name, title: profile.title, email: profile.email.downcase, phone: profile.phone) %>
-                                        <%= link_to "<button class=\"btn-primary btn-xs btn-block\"><i class=\"fa fa-plus\"></i> Add contact</button>".html_safe, '#extension_new_contact_modal-'+profile.id.to_s, 'data-toggle' => 'modal', 'class' => 'edit-contact-link' %>
+                                        <%= link_to "<button class=\"btn-primary btn-xs btn-block\" data-toggle=\"tooltip\" data-placement=\"top\" data-original-title=\"Add contact and manage it with teammates.\"><i class=\"fa fa-plus\"></i> Add contact</button>".html_safe, '#extension_new_contact_modal-'+profile.id.to_s, 'data-toggle' => 'modal', 'class' => 'edit-contact-link' %>
                                     </div>
                                     <div class="col-xs-6">
                                         <button type="button" class="btn-outline btn-xs btn-block" data-toggle="tooltip" data-placement="top" data-original-title="Please add contact first"><i class="fa fa-plus"></i> Add a note</button></i>
@@ -375,10 +375,10 @@
                                 <% end %>
                             <% else %>
                                     <div class="col-xs-6">
-                                        <button type="button" class="btn-outline btn-xs btn-block" data-toggle="tooltip" data-placement="top" data-original-title="Upgrade to save this contact and manage it with teammates."><i class="fa fa-plus"></i> Add contact</button></i>
+                                        <button type="button" class="btn-outline btn-xs btn-block" data-toggle="tooltip" data-placement="top" data-original-title="You have reached your free-tier limit. Upgrade to save unlimited contacts."><i class="fa fa-plus"></i> Add contact</button></i>
                                     </div>
                                     <div class="col-xs-6">
-                                        <button type="button" class="btn-outline btn-xs btn-block" data-toggle="tooltip" data-placement="top" data-original-title="Upgrade to add notes and share them with teammates."><i class="fa fa-plus"></i> Add a note</button></i>
+                                        <button type="button" class="btn-outline btn-xs btn-block" data-toggle="tooltip" data-placement="top" data-original-title="You have reached your free-tier limit. Upgrade to save unlimited contacts."><i class="fa fa-plus"></i> Add a note</button></i>
                                     </div>
                             <% end %>
                             </div>
