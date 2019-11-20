@@ -5,6 +5,7 @@ class SettingsController < ApplicationController
 	def index
 		@user_count = current_user.organization.users.count
 		@organization = current_user.organization
+		@contacts_count_in_org = current_user.organization.contacts.count # Used for tracking # of contacts in free-tier
 
 		# if (@salesforce_user.nil? && # could not connect via organization/admin login
 		# 		current_user.power_or_trial_only?)  # AND is an individual (power user or trial/Chrome user)

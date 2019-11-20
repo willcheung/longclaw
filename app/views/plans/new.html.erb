@@ -221,14 +221,14 @@
               <td colspan="6" class="subheader">Contacts management
               <i class="fa fa-question-mark fa-question-circle" data-toggle="tooltip" data-trigger="hover click" data-title="Save, manage, and search your contacts"></i>
               </td>
-              <td colspan="2">Up to 20 contacts</td>
+              <td colspan="2">Up to 20 contacts <% if current_user %><br/><small>You used <%= @contacts_count_in_org %></small><% end %></td>
               <td colspan="2">Unlimited</i></td>
               <td colspan="2">Unlimited</i></td>
             </tr>
             <tr>
               <td colspan="6" class="subheader">Add notes to contacts
                 <i class="fa fa-question-mark fa-question-circle" data-toggle="tooltip" data-trigger="hover click" data-title="Add notes to your contacts and share them with teammates"></i></td>
-              <td colspan="2">Up to 20 contacts</td>
+              <td colspan="2">Unlimited</td>
               <td colspan="2">Unlimited</i></td>
               <td colspan="2">Unlimited</i></td>
             </tr>
@@ -236,7 +236,7 @@
               <td colspan="6" class="subheader">Accounts management
               <i class="fa fa-question-mark fa-question-circle" data-toggle="tooltip" data-trigger="hover click" data-title="Group contacts together by companies or groups"></i>
               </td>
-              <td colspan="2">Up to 20 accounts</td>
+              <td colspan="2">Unlimited</td>
               <td colspan="2">Unlimited</i></td>
               <td colspan="2">Unlimited</i></td>
             </tr>

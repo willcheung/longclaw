@@ -27,6 +27,8 @@ class PlansController < ApplicationController
     # check if user is logged in
     return if current_user.nil?
 
+    @contacts_count_in_org = current_user.organization.contacts.count # Used for tracking # of contacts in free-tier
+
     # check Stripe subscription
     @customer = Stripe::Customer.retrieve(current_user.stripe_customer_id, :expand => 'subscriptions') if current_user.stripe_customer_id
     if @customer.present? && !@customer[:deleted] && @customer.respond_to?(:subscriptions) && @customer.subscriptions.respond_to?(:data) && !@customer.subscriptions.data.empty?

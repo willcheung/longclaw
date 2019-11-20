@@ -24,6 +24,7 @@
                     <li class="list-group-item">Users in my team: <%= @user_count %> <span style="font-size:12px;margin-left:10px"><a href="<%= settings_users_path %>">Manage users</a></span></li>
                     <li class="list-group-item">My Plan:<strong> <%= current_user.role %> </strong>
                         <span style="font-size:12px;margin-left:10px"><a href="/plans/new">Change plan</a></span>
+                        <% if current_user.role == "Basic" %><br><span style="color: #aaa;font-size:12px">Basic plan has limit of 20 saved contacts. You used <%= @contacts_count_in_org %>.</span><% end %>
                         <% if current_user.superadmin? %><i style="color: gold" class="fa fa-star" data-toggle="tooltip" data-placement="top" data-original-title="Superadmin!"></i><% end %>
                     </li>
                 </ul>

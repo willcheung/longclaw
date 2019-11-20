@@ -347,7 +347,7 @@
                         </a>
                         <div class="container">
                             <div class="row m-t-xs m-b-sm">
-                            <% if true %>
+                            <% if current_user.plus? or @contacts_count_in_org <= 20 %>
                                 <% if contact.present? %>
                                     <div class="col-xs-6">
                                         <%= link_to "<button class=\"btn-outline btn-xs btn-block\"><i class=\"fa fa-pencil\"></i> Edit contact</button>".html_safe, '#extension_edit_contact_modal-'+contact.id, 'data-toggle' => 'modal', 'class' => 'edit-contact-link', 'sectionid' => "Profile-"+profile.id.to_s+"-"+n.to_s %>
