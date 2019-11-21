@@ -5,7 +5,7 @@ class UserMailer < ApplicationMailer
     @user = user
 
     puts "Emailing welcome email to #{user.email}"
-    mail(to: @user.email, subject: "Welcome to ContextSmith", from: "will@contextsmith.com")
+    mail(to: @user.email, subject: "Welcome to ContextSmith", from: "\"Will Cheung\" <will@contextsmith.com>")
   end
 
   def weekly_tracking_summary(user)
