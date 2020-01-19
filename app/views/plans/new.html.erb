@@ -36,7 +36,7 @@
 
 <div class="container center-block">
   <% if flash[:error].present? or flash[:notice].present? %>
-      <div class="alert alert-warning m-t-xs" role="alert" id="error_explanation">
+      <div class="alert alert-info m-t-xs" role="alert" id="error_explanation">
         <h3 class="text-center"><%= flash[:error] %><%= flash[:notice] %></h3>
       </div>
   <% end %>
@@ -44,6 +44,15 @@
       <input type="hidden" name="plan" id="plan" value="">
       <input type="hidden" name="stripeToken" id="stripeToken">
   <% end %>
+
+  <% if !params[:plan].nil? and params[:plan].start_with?('pro-') %>
+  <div class="alert alert-info m-t-xs">
+    <h2><i class="fa fa-check-square-o"></i> Open ContextSmith Pro from Gmail's left sidebar</h2>
+    <img src="/assets/images/cs-pro-tutorial.png"/ style="height:300px;"/>
+  </div>
+
+  <% end %>
+
   <div class="container">
 	<div class="row">
 	<table class="plan table table-hover table-bordered table-striped text-center">

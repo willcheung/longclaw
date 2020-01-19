@@ -167,7 +167,7 @@ class PlansController < ApplicationController
     if params[:refresh] == 'true'
       redirect_to :back
     elsif subscription
-      redirect_to new_plan_path
+      redirect_to new_plan_path(:plan => subscription.plan.id)
     end
   rescue RuntimeError, Stripe::StripeError => e
     logger.error e
