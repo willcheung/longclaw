@@ -129,7 +129,7 @@ class HooksController < ApplicationController
         plan = event.data.object.plan.nickname
         trial_ends = event.data.object.trial_end - Time.now.to_i < 86400 ? "1 day" : view_context.time_ago_in_words(Time.zone.at(event.data.object.trial_end)) # any time of 1 day or less (but still any) will be rounded to "1 day"
         UserMailer.trial_ends_soon(user, plan, trial_ends).deliver_later
-        render nothing: true, status: 202
+        render nothing: true, status: 202 and return
       end
     elsif params[:type] == 'invoice.payment_failed'
       puts "invoice.payment_failed event received: #{params[:id]}"
@@ -139,14 +139,14 @@ class HooksController < ApplicationController
         # plan = event.data.object.plan.nickname
         user.downgrade!
         UserMailer.subscription_cancelled(user).deliver_later
-        render nothing: true, status: 202
+        render nothing: true, status: 202 and return
       end
     end
 
-    render nothing: true, status: 304 # Not Modified
+    render nothing: true, status: 304 and return # Not Modified (for all other requests)
   rescue Stripe::APIConnectionError, Stripe::StripeError => e
     puts e
-    render nothing: true, status: 400
+    render nothing: true, status: 400 and return
   end
 
   def load_emails_since_yesterday

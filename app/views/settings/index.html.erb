@@ -18,9 +18,10 @@
             <h1>Email Subscriptions</h1>
             <div class="ibox-content">
                 <ul class="list-group clear-list">
-                    <li class="list-group-item">My Email Settings: <br> <small><%= @current_user_subscriptions.select('projects.name').pluck(:name).sort_by {|n| n.upcase}.join('&nbsp;&nbsp; | &nbsp;&nbsp;').html_safe %> </small></li>
                     <li class="list-group-item"><%= best_in_place current_user, :email_weekly_tracking, :as => 'checkbox', :data => {:user => current_user}, collection: {false: raw('<i class="fa fa-square-o bip_activator"></i>'), true: raw('<i class="fa fa-check-square-o bip_activator"></i>')}%> &nbsp; Weekly email tracking summary <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Every Sunday, we send a weekly summary of your email and CRM activities."></i> </li>
                     <li class="list-group-item"><%= best_in_place current_user, :email_new_features, :as => 'checkbox', :data => {:user => current_user}, collection: {false: raw('<i class="fa fa-square-o bip_activator"></i>'), true: raw('<i class="fa fa-check-square-o bip_activator"></i>')}%> &nbsp; New feature updates <i class="fa fa-question-circle m-l-xs" data-toggle="tooltip" data-placement="top" data-original-title="Very occassional updates on news and new features."></i> </li>
+                    <li class="list-group-item">&nbsp;</li>
+                    <!-- <li class="list-group-item">Opportunities I'm following: <br> <small><%= @current_user_subscriptions.select('projects.name').pluck(:name).sort_by {|n| n.upcase}.join('&nbsp;&nbsp; | &nbsp;&nbsp;').html_safe %> </small></li> -->
                 </ul>
             </div>
         </div>
@@ -79,7 +80,7 @@
 
             </div>
         </div>
-        
+
     </div>
 
     <h1>Integrations </h1>
