@@ -122,9 +122,7 @@ class ProjectsController < ApplicationController
     @project.project_members.new(user: current_user)
     # TODO: Uncomment below to undo #1011
     # Subscribe current_user as weekly / daily follower because s/he created the project
-    # @project.subscribers.new(user: current_user)
-    # Subscribe current_user as daily follower only temporarily (per #1011)
-    @project.subscribers.new(user: current_user, weekly: false)
+    @project.subscribers.new(user: current_user, weekly: true, daily: false)
 
       respond_to do |format|
         if params[:commit] == 'Create with account contacts' 
@@ -496,7 +494,7 @@ class ProjectsController < ApplicationController
 
   def get_custom_fields_and_lists
     @custom_lists = current_user.organization.get_custom_lists_with_options
-    @opportunity_types = !@custom_lists.blank? ? @custom_lists["Opportunity Type"] : {}
+    @opportunity_types = !(@custom_lists.blank? or @customer_list.nil?) ? @custom_lists["Opportunity Type"] : {}
   end
 
   def project_filter_state

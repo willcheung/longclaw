@@ -24,6 +24,10 @@ class UserMailer < ApplicationMailer
     #                  .where(sql_where)
     #                  .order('tracking_events.date DESC NULLS LAST').order('sent_at DESC');
 
+    open_or_recently_closed = "notifications.id IS NULL OR notifications.is_complete = false OR notifications.complete_date BETWEEN CURRENT_TIMESTAMP - INTERVAL '1 week' and CURRENT_TIMESTAMP"
+    @current_user_timezone = user.time_zone
+    @projects = Project.visible_to(user.organization_id, user.id).following_weekly(user.id).includes(:account, notifications: :assign_to_user).where(open_or_recently_closed).group("notifications.id, accounts.id, users.id").order(:name)
+
     @unopened = TrackingRequest.find_by_sql("SELECT user_id,subject,sent_at,recipients, email_id, count(e.id) as cnt 
                   FROM tracking_requests r left outer join tracking_events e on e.tracking_id = r.tracking_id 
                   WHERE r.user_id='#{user.id}' AND r.sent_at > NOW() - interval '7' day group by 1,2,3,4,5 having count(e.id) = 0;")

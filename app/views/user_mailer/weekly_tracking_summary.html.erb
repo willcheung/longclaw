@@ -199,22 +199,185 @@
 </table>
 
 <table class="row" style="font-size:14px;padding:0;margin:0;width:100%;border-collapse:collapse;">
-    <tbody style="width:100%;display:table;margin-top:1em">
-      <tr style="line-height: 2em;">
-        Your team's CRM activities will show up here, such as new contacts and notes.
-      </tr>
-      <tr style="text-align:center">
-        <a target="_blank" href="https://app.contextsmith.com/plans/new" style="margin-top:10px;background-color:#3C8DC5;border-radius:4px;color:#ffffff;display:inline-block;font-family:sans-serif;font-size:13px;font-weight:bold;line-height:32px;text-align:center;text-decoration:none;width:200px;-webkit-text-size-adjust:none;">Upgrade and try CRM for free</a>
-      </tr>
-    </tbody>
+    <% if @user.pro? %>
+        <!-- Summary -->
+        <div style="margin-bottom:30px;min-width:560px;max-width:100%;">
+          <p style="margin:6px 0 9px;font-size:12px;font-weight:200;margin-bottom:0px;color:#333333">You have <%= pluralize(@projects.length, 'opportunity') %></p>
+
+          <!-- Project/stream detail -->
+          <% @projects.each.with_index do |p,i| %>
+
+            <!-- Stream divider (horizontal bar) -->
+            <div style="margin:0;<% unless i == 0 %>padding:12px 0px;border-top:2px dotted #DDD;<% end %>"></div>
+
+            <% open_tasks = p.notifications.reject { |n| n.is_complete || (n.category != Notification::CATEGORY[:Alert] && n.category != Notification::CATEGORY[:Todo])} %>
+            <% open_alerts = p.notifications.alerts.reject {|n| n.is_complete } %>
+            <% open_alerts_last_week_count = p.get_alerts_in_range(@current_user_timezone,nil,7).reject {|n| n.is_complete }.count %>
+            
+
+            <table cellpadding="0" cellspacing="0" border="0" style="width:90%;background-color:#FFF;vertical-align:top;">
+              <tbody>
+                <tr>
+                  <div style="border-bottom:0px solid #c1c1c1;padding-bottom: 10px;">
+                    <div style="display: inline-block; padding-top: 19px; height: 100%;">
+                      <span style="color:#666;text-overflow:ellipsis;font-size:20px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-decoration:none;"><%= p.name %></span>
+                      <!-- ## account name-->
+                      <span style="margin:0 0.4em;font-size:24px;border-left:1px solid #CCC;"></span>
+                      <span style="color:#666;font-size:20px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;text-overflow:ellipsis;">Account: <%= p.account.name %></span>
+                    </div>
+                  </div>
+                </tr>
+              </tbody>
+            </table>
+
+            <!-- Stream updates -->
+            <div style="margin:0;">
+              <table class="row" style="padding:0;margin:0;width:100%;border-collapse:collapse;">
+                <tbody style="width:100%;display:table;">
+                <% p.activities.from_lastweek.each do |a| %>
+                  <tr>
+                  <% activity_date = Time.at(a.last_sent_date).strftime("%b %-d, %Y %I:%M%p %Z") %>
+                  <% if a.category == Activity::CATEGORY[:Note] %>
+                  <!-- Notes -->
+                    <td style="padding-top:5px;padding-right:5px;min-width:30px;max-width:35px;">
+                      <img src="https://app.contextsmith.com/assets/images/icons/note_icon.png" title="Note sent <%= activity_date %>">
+                    </td>
+                    <td style="min-width:400px;">
+                      <table border="0" cellspacing="0" cellpadding="0" bgcolor="#ffefb8" style="padding:0;border:0;width:100%;border-spacing:0;border-collapse:collapse;text-align:left;margin:4px 0!important;background-color:#ffefb8;">
+                      <% if a['rag_score'] == 3 %>
+                        <tbody style="border-left:4px solid #A1C436">
+                      <% elsif a['rag_score'] == 2 %>
+                        <tbody style="border-left:4px solid #FFA500">
+                      <% elsif a['rag_score'] == 1 %>
+                        <tbody style="border-left:4px solid #e7182d">
+                      <% else %>
+                        <tbody>
+                      <% end %>
+                            <tr>
+                              <td style="font-size:13px;text-align:left;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;width:84%;padding:8px 8px 0;">
+                                <strong><%= get_full_name(a.user) %></strong> wrote a note:
+                              </td>
+                            </tr>
+                            <tr>
+                              <td style="font-size:13px;text-align:left;line-height:19px;border-collapse:collapse;border-spacing:0;vertical-align:top;width:84%;padding:8px;">
+                                <% if a.note.length != 0 %>
+                                  <%= simple_format(a.note) %>
+                                <% else %> 
+                                  <%= rag_note(a['rag_score']) %> <!--placeholder-->
+                                <% end %>
+                              </td>
+                            </tr>
+                          </tbody>
+                      </table>
+                    </td>
+                  <% elsif a.category == Activity::CATEGORY[:Conversation] %>
+                  <!-- Conversations (not included) -->
+                  <% elsif a.category == Activity::CATEGORY[:Meeting] %>
+                  <!-- Meetings (not included) -->
+                  <% elsif a.category == Activity::CATEGORY[:JIRA] %>
+                  <!-- JIRA (not included) -->
+                  <% elsif a.category == Activity::CATEGORY[:Zendesk] %>
+                  <!-- Zendesk (not included) -->
+                  <% elsif a.category == Activity::CATEGORY[:Salesforce] %>
+                  <!-- Salesforce (not included) -->
+                  <% end %>
+                  </tr>
+                <% end %>  <!-- END: do p.activities.from_lastweek.each -->
+                </tbody>
+              </table>
+            </div> <!-- END: Stream Updates -->
+
+            <!-- "Open Alerts & Next Steps" (Tasks) -->
+            <div style="margin:0;font-size:14px;">
+            <% if open_tasks.empty? %>
+              <span style="margin:1em 0em;font-size:15px;font-weight:bold;color:#A1C436">No open Tasks.</span>
+            <% else %>
+              <!-- List alerts -->
+              <table border="0" cellspacing="0" cellpadding="0" style="padding:0;border:0;width:100%;border-spacing:0;border-collapse:collapse;text-align:left;margin:4px 0!important">
+                <tbody>
+                  <% open_tasks.each do |n| %>
+                    <tr>
+                      <td style="text-align:left;font-size:15px;line-height:15px;border-collapse:collapse;border-spacing:0;vertical-align:top;width:20px;min-width:20px;max-width:20px;padding:3px;">
+                        <div style="width:12px;height:12px;border:1px solid #c1c1c1;margin:3px;font-size:18px;"><%= '✔' if n.is_complete %></div>
+                      </td>
+                      <td style="padding:5px 5px 8px 5px">
+                        <table>
+                          <tr>
+                            <td style="text-align:left;font-size:15px;line-height:14px;border-collapse:collapse;border-spacing:0;vertical-align:top">
+                              <span style="font-weight:bold;font-size:14px;line-height:15px;">
+                                <%= n.name %>
+                              </span>
+                              <br>
+                              <% if n.category == Notification::CATEGORY[:Alert] %>
+                                <!-- Alert notification detail -->
+                                <span style="font-size:11px;color:grey;line-height:1">
+                                <% if n.description.length > 230 %>
+                                  <%= n.description[0,229] %>&#8230;
+                                <% else %>
+                                  <%= n.description %>
+                                <% end %>
+                                </span>
+                              <% end %>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td style="border-collapse:collapse;padding:5px 0px">
+                              <span style="text-align:left;border-spacing:0;vertical-align:top;width:85px;min-width:80px;max-width:85px">
+                                <span style="font-size:10px;font-weight:600;padding:1px 5px;text-shadow:none;background-color:white;border-radius:0.25em;min-width:80px;max-width:80px;color:
+                                <% if n.category == Notification::CATEGORY[:Action] %>
+                                  #3C8DC5;border:2px #3C8DC5
+                                <% elsif n.category == Notification::CATEGORY[:Opportunity] %>
+                                  #A1C436;border:2px #A1C436
+                                <% elsif n.category == Notification::CATEGORY[:Todo] %>
+                                  #3CC5B9;border:2px #3CC5B9
+                                <% else #n.category == Notification::CATEGORY[:Alert] %> 
+                                  #ED5565;border:2px #ED5565 
+                                <% end %> solid">
+                                  <%= n.category %></span>
+                              </span>
+                              <span style="color:#999;font-weight:normal;text-align:right;font-size:12px;border-spacing:0;vertical-align:top;min-width:115px;max-width:120px">
+                                Assigned to: <%= n.assign_to_user.nil? ? "(none)" : n.assign_to_user.first_name %>
+                              </span>
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                  <% end %> <!-- End: open_tasks.each do |n| -->
+                </tbody>
+              </table>
+            <% end %>  <!-- End: Open Alerts  -->
+            </div>
+
+            <!-- "See more of this Stream" button -->
+            <div style="height:40px;width:100%;margin:2em auto">
+              <span style="margin-left:<%=15-(p.name.length/4)%>em">
+                <a href="<%= project_url(p) + '/tasks' %>" style="background-color:#ffffff;border:1px solid #2ba6cb;border-radius:9px;color:#2ba6cb;display:inline-block;font-family:sans-serif;font-size:13px;line-height:30px;text-align:center;padding:0px 7px;-webkit-text-size-adjust:none;mso-hide:all;" title='Open "<%=p.name%>" opportunity in ContextSmith app'>Go to <%= p.name %> &rarr;</a> 
+              </span>
+            </div>
+
+          <% end %> <!-- End: Do @projects.each (Project/stream detail) -->
+        </div>
+      
+    <% else %> <!-- End: @user.pro? -->
+        <tbody style="width:100%;display:table;margin-top:1em">
+          <tr style="line-height: 2em;">
+            Your team's CRM activities will show up here, such as new contacts and notes.
+          </tr>
+          <tr style="text-align:center">
+            <a target="_blank" href="https://app.contextsmith.com/plans/new" style="margin-top:10px;background-color:#3C8DC5;border-radius:4px;color:#ffffff;display:inline-block;font-family:sans-serif;font-size:13px;font-weight:bold;line-height:32px;text-align:center;text-decoration:none;width:200px;-webkit-text-size-adjust:none;">Upgrade and try CRM for free</a>
+          </tr>
+        </tbody>
+    <% end %>
 </table>
+
 
 <div style="width:100%;padding-bottom:20px"></div>
 
 <!-- Customer Feedback request -->
-<table class="row callout" style="border-spacing: 0; border-collapse: collapse; vertical-align: top; text-align: left; width: 100%; position: relative; display: block; padding: 0px; margin-bottom: 20px;margin-top:30px;">
-  <tr style="vertical-align: top; text-align: left; padding: 0;" align="left">
-     <td class="wrapper last" align="left" valign="top">
+<table class="row callout" cellspacing="0" cellpadding="0" style="margin:0;padding:0;border:0;text-align:left;border-collapse:collapse;border-spacing:0 margin-bottom: 20px;margin-top:30px;">
+  <tr style="vertical-align: top; text-align: left; padding: 0;" align="center">
+     <td class="wrapper last" align="center" valign="top">
         <table class="twelve columns">
            <tr align="left">
               <td class="panel" style="word-break: break-word; -webkit-hyphens: auto; -moz-hyphens: auto; hyphens: auto; border-collapse: collapse !important; vertical-align: top; text-align: left; color: #222222; line-height: 19px; font-size: 14px; background: #ECF8FF; margin: 0; padding: 10px; border: 1px solid #b9e5ff;" align="left" bgcolor="#ECF8FF" valign="top">
