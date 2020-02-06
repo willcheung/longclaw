@@ -66,18 +66,31 @@
 
         <div class="col-md-4">
             <div class="ibox-content text-center <% if !current_user.pro? %>settings-element-disabled<% end %>">
-                
                 <div class="m-b-sm">
                     <i class="fa fa-pencil-square-o fa-4x"></i>
                 </div>
                 
                 <% if current_user.pro? %>
                     <h3><a href="<%= settings_custom_fields_path %>">Create/Edit custom fields</a></h3>
-                    <h3><a href="<%= settings_custom_lists_path %>">Create/Edit custom lists</a></h3>
+                    <p>Create any field that suits your business. <br/>For example, "Invoice #" or "Account Status".</p>
                 <% else %>
                     <p>Upgrade to Pro plan and create custom CRM fields</p>
                 <% end %>
+            </div>
+        </div>
 
+        <div class="col-md-4">
+            <div class="ibox-content text-center <% if !current_user.pro? %>settings-element-disabled<% end %>">
+                <div class="m-b-sm">
+                    <i class="fa fa-list fa-4x"></i>
+                </div>
+                
+                <% if current_user.pro? %>
+                    <h3><a href="<%= settings_custom_lists_path %>">Create/Edit custom lists</a></h3>
+                    <p>Fields that requires a list of options, create the list here. <br/>For example, "Account Status" can have "Open", "Closed", "Pending".</p>
+                <% else %>
+                    <p>Upgrade to Pro plan and create custom CRM fields</p>
+                <% end %>
             </div>
         </div>
 
